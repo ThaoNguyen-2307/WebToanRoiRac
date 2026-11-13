@@ -5,10 +5,10 @@
    Các giá trị này được phép công khai; bảo mật nằm ở file firestore.rules.
    ========================================================= */
 export const firebaseConfig = {
-  apiKey: "DIEN_API_KEY",
-  authDomain: "DIEN_PROJECT_ID.firebaseapp.com",
-  projectId: "DIEN_PROJECT_ID",
-  storageBucket: "DIEN_PROJECT_ID.appspot.com",
-  messagingSenderId: "DIEN_SENDER_ID",
-  appId: "DIEN_APP_ID"
+  apiKey: "AIzaSyBZ12ELGoKi5vcRrDl5NCbEZlNmP-kjF-8",
+  authDomain: "webtoanroirac.firebaseapp.com",
+  projectId: "webtoanroirac",
+  storageBucket: "webtoanroirac.firebasestorage.app",
+  messagingSenderId: "370044308082",
+  appId: "1:370044308082:web:7a7a7c5e5a4ca05520d0eb"
 };
