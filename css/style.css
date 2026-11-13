@@ -113,6 +113,8 @@ h1, h2, h3, h4 { margin: 0 0 .5em; line-height: 1.25; }
   box-shadow: 0 10px 30px rgba(0,0,0,.1);
 }
 .dropdown:hover .dropdown-menu, .dropdown:focus-within .dropdown-menu { display: block; }
+/* Đang rê chuột trên thanh menu: chỉ mở đúng mục đang rê, đóng các mục khác (kể cả mục vừa bấm) */
+.topnav:hover .dropdown:not(:hover) .dropdown-menu { display: none; }
 .dropdown-menu a { display: block; padding: 8px 12px; border-radius: 6px; font-size: 14px; }
 .dropdown-menu a:hover { background: var(--primary-soft); color: var(--primary); }
 

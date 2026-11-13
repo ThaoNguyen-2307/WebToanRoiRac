@@ -171,6 +171,7 @@ function router() {
     highlightNav(null);
   }
   document.body.classList.remove("menu-open");   // đóng menu trên điện thoại
+  document.activeElement?.blur();                // bỏ chọn mục menu vừa bấm để menu thả xuống tự đóng
   window.scrollTo(0, 0);
 }
 
