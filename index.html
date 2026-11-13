@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mô phỏng Thuật toán Toán rời rạc</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- ===== THANH TIÊU ĐỀ ===== -->
+  <header class="topbar">
+    <button class="menu-btn" id="menuBtn" aria-label="Mở menu">☰</button>
+    <a href="#/" class="logo">
+      <span class="logo-mark">∑</span>
+      <span>Toán Rời Rạc <small>Mô phỏng thuật toán</small></span>
+    </a>
+  </header>
+
+  <div class="layout">
+    <!-- ===== MENU BÊN TRÁI: danh sách thuật toán (được tạo bằng JS) ===== -->
+    <nav class="sidebar" id="sidebar"></nav>
+
+    <!-- ===== NỘI DUNG CHÍNH: trang chủ hoặc trang thuật toán (được tạo bằng JS) ===== -->
+    <main class="content" id="app"></main>
+  </div>
+
+  <!-- Thứ tự quan trọng: data.js (dữ liệu) phải nạp trước main.js (xử lý) -->
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
