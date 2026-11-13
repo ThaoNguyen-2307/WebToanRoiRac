@@ -8,7 +8,7 @@
 |---|---|---|
 | **Khách** (chưa đăng nhập) | `index.html` | Xem trang chủ, lý thuyết, mô phỏng mọi thuật toán, dùng ví dụ có sẵn |
 | **Người dùng** (đã đăng nhập) | `tai-khoan.html` | Như khách, cộng thêm: lưu lịch sử mô phỏng, mô phỏng lại, đổi tên, đổi mật khẩu |
-| **Đăng nhập / Đăng ký** | `dang-nhap.html` | Email + mật khẩu, **Google**, **Facebook**, quên mật khẩu |
+| **Đăng nhập / Đăng ký** | `dang-nhap.html` | Email + mật khẩu, **Google** (Gmail), quên mật khẩu |
 | **Admin** | `admin/index.html` | Thống kê: số tài khoản, lượt mô phỏng, thuật toán dùng nhiều nhất |
 | | `admin/tai-khoan.html` | Đổi vai trò (người dùng ↔ admin), khóa / mở khóa tài khoản |
 | | `admin/vi-du.html` | Thêm / sửa / xóa ví dụ có sẵn cho từng thuật toán (yêu cầu ≥ 5 ví dụ) |
@@ -56,18 +56,9 @@ web-toan-roi-rac/
 3. **Build → Authentication → Get started → Sign-in method**, bật:
    - **Email/Password**
    - **Google** (chọn email hỗ trợ là email của bạn → Save)
-   - **Facebook** (xem mục bên dưới)
 4. **Authentication → Settings → Authorized domains**: thêm `127.0.0.1` (Live Server mở web ở địa chỉ này; `localhost` có sẵn).
 5. **Build → Firestore Database → Create database** → chọn vị trí `asia-southeast1` (Singapore) → **Production mode**.
 6. Tab **Rules** của Firestore: xóa hết, dán toàn bộ nội dung file `firestore.rules` → **Publish**.
-
-### Bật đăng nhập Facebook
-
-1. Vào https://developers.facebook.com → **My Apps → Create App** → chọn loại cho phép đăng nhập bằng Facebook (Authenticate and request data from users with Facebook Login).
-2. Trong app: **App settings → Basic**: lấy **App ID** và **App Secret**.
-3. Firebase → Authentication → Sign-in method → **Facebook** → dán App ID, App Secret → chép dòng **OAuth redirect URI** → Save.
-4. Quay lại Facebook: **Facebook Login → Settings → Valid OAuth Redirect URIs**: dán URI vừa chép → Save.
-5. Khi app Facebook còn ở chế độ **Development**, chỉ tài khoản Facebook của bạn (và người được thêm vào mục **App roles → Roles**) đăng nhập được. Như vậy là đủ để demo.
 
 ### Tạo tài khoản admin đầu tiên
 

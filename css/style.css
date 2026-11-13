@@ -476,8 +476,6 @@ body.home .content { padding: 0; }
 }
 .btn-social.google { background: #fff; border: 1px solid var(--border); color: var(--text); }
 .btn-social.google:hover { background: #f8f9fa; }
-.btn-social.facebook { background: #1877f2; border: 1px solid #1877f2; color: #fff; }
-.btn-social.facebook:hover { filter: brightness(1.08); }
 .btn-social:disabled { opacity: .55; cursor: not-allowed; }
 .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--muted); font-size: 13px; }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }

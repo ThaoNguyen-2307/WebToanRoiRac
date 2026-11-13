@@ -156,7 +156,7 @@ export function ngayGio(ts) {
 }
 
 export function tenCachDangNhap(ma) {
-  return { "google.com": "Google", "facebook.com": "Facebook", "password": "Email + mật khẩu" }[ma] || ma;
+  return { "google.com": "Google", "password": "Email + mật khẩu" }[ma] || ma;
 }
 
 // Dịch mã lỗi của Firebase sang tiếng Việt
@@ -176,7 +176,7 @@ export function loiTiengViet(err) {
     "auth/cancelled-popup-request": "Bạn đã đóng cửa sổ đăng nhập.",
     "auth/popup-blocked": "Trình duyệt chặn cửa sổ đăng nhập. Hãy cho phép cửa sổ bật lên (pop-up) rồi thử lại.",
     "auth/account-exists-with-different-credential":
-      "Email này đã đăng ký bằng cách khác (Google, Facebook hoặc mật khẩu). Hãy đăng nhập bằng đúng cách đó.",
+      "Email này đã đăng ký bằng cách khác (Google hoặc mật khẩu). Hãy đăng nhập bằng đúng cách đó.",
     "auth/unauthorized-domain":
       "Tên miền này chưa được cho phép. Thêm nó trong Firebase -> Authentication -> Settings -> Authorized domains.",
     "auth/operation-not-allowed": "Cách đăng nhập này chưa được bật trong Firebase Authentication.",

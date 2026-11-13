@@ -1,12 +1,12 @@
 /* =========================================================
    dang-nhap.js — TRANG ĐĂNG NHẬP / ĐĂNG KÝ
-   3 cách: email + mật khẩu, Google, Facebook
+   2 cách: email + mật khẩu, Google
    ========================================================= */
 import { auth, daCauHinh, BASE, layHoSo, theoDoiDangNhap, tamDung, loiTiengViet, thongBao }
   from "./firebase.js";
 import {
   signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile,
-  signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, sendPasswordResetEmail
+  signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const formDangNhap = document.getElementById("formDangNhap");
@@ -96,16 +96,10 @@ document.getElementById("btnQuenMatKhau").onclick = ev => {
   });
 };
 
-/* ---------- 2. Google và 3. Facebook ----------
-   Mở cửa sổ đăng nhập của Google/Facebook. Lần đầu dùng sẽ tự tạo tài khoản (= đăng ký). */
+/* ---------- 2. Google ----------
+   Mở cửa sổ đăng nhập của Google. Lần đầu dùng sẽ tự tạo tài khoản (= đăng ký). */
 document.getElementById("btnGoogle").onclick = ev => {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });   // luôn cho chọn tài khoản Gmail
-  dangXuLy(ev.currentTarget, () => signInWithPopup(auth, provider));
-};
-
-document.getElementById("btnFacebook").onclick = ev => {
-  const provider = new FacebookAuthProvider();
-  provider.addScope("email");
   dangXuLy(ev.currentTarget, () => signInWithPopup(auth, provider));
 };
