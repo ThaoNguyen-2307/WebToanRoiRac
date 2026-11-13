@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tổng quan · Quản trị</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<!-- data-base="../": trang nằm trong thư mục admin/ nên đường dẫn về gốc là ../
+     data-page: cho admin.js biết đang ở trang nào -->
+<body class="admin-page" data-base="../" data-page="tong-quan">
+  <header class="topbar">
+    <a href="../index.html" class="logo">
+      <span class="logo-mark">∑</span>
+      <span>Toán Rời Rạc <small>Trang quản trị</small></span>
+    </a>
+    <div class="user-area" id="userArea"></div>
+  </header>
+
+  <div class="admin-layout">
+    <nav class="admin-nav" id="adminNav"></nav>     <!-- menu trái: tạo bằng js/admin.js -->
+    <main class="admin-main" id="adminMain">
+      <p class="dang-tai">Đang kiểm tra quyền truy cập...</p>
+    </main>
+  </div>
+
+  <script src="../js/data.js"></script>
+  <script type="module" src="../js/admin.js"></script>
+</body>
+</html>

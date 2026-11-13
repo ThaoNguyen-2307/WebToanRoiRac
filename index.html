@@ -14,6 +14,13 @@
       <span class="logo-mark">∑</span>
       <span>Toán Rời Rạc <small>Mô phỏng thuật toán</small></span>
     </a>
+    <!-- Menu ngang: Quay lui / Quy hoạch động / Nhánh cận / Đồ thị (được tạo bằng JS) -->
+    <nav class="topnav" id="topnav"></nav>
+    <!-- Nút Đăng nhập / Đăng ký hoặc tên người dùng (tạo bằng js/firebase.js) -->
+    <div class="user-area" id="userArea">
+      <a class="btn" href="dang-nhap.html">Đăng nhập</a>
+      <a class="btn primary" href="dang-nhap.html#dang-ky">Đăng ký</a>
+    </div>
   </header>
 
   <div class="layout">
@@ -26,6 +33,9 @@
 
   <!-- Thứ tự quan trọng: data.js (dữ liệu) phải nạp trước main.js (xử lý) -->
   <script src="js/data.js"></script>
+  <script src="js/minh-hoa.js"></script>
   <script src="js/main.js"></script>
+  <!-- Phần đăng nhập + lưu lịch sử (Firebase). type="module" để dùng được import -->
+  <script type="module" src="js/trang-khach.js"></script>
 </body>
 </html>

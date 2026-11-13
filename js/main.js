@@ -9,9 +9,21 @@
 const app = document.getElementById("app");
 const sidebar = document.getElementById("sidebar");
 
-/* ---------- 1. MENU BÊN TRÁI ---------- */
+/* Phần Firebase (js/trang-khach.js) nạp sau file này. Khi sẵn sàng nó gọi __baoSanSang(App).
+   Dùng: const App = await sanSang;  App.layViDu(...), App.luuLichSu(...)
+   Nếu Firebase lỗi / chưa cấu hình, web vẫn chạy bình thường như khách.             */
+const sanSang = new Promise(resolve => { window.__baoSanSang = resolve; });
+
+/* ---------- 1. CỘT BÊN TRÁI: LỊCH SỬ MÔ PHỎNG ----------
+   Máy tính: chỉ hiện lịch sử (chọn thuật toán bằng menu ngang phía trên).
+   Điện thoại: menu ngang bị ẩn nên hiện thêm danh sách thuật toán ở cuối.     */
 function renderSidebar() {
-  let html = `<a href="#/" class="nav-home">⌂ Trang chủ</a>`;
+  let html = `
+    <a href="#/" class="nav-home">⌂ Trang chủ</a>
+    <div class="nav-title">🕘 Lịch sử mô phỏng</div>
+    <div id="historyList"><p class="history-empty">Đang tải...</p></div>
+
+    <div class="mobile-only">`;
   for (const g of GROUPS) {
     html += `<div class="nav-group"><div class="nav-title">${g.icon} ${g.name}</div>`;
     for (const a of ALGORITHMS.filter(x => x.group === g.id)) {
@@ -19,7 +31,106 @@ function renderSidebar() {
     }
     html += `</div>`;
   }
-  sidebar.innerHTML = html;
+  sidebar.innerHTML = html + `</div>`;
+  khoiTaoLichSu();
+}
+
+let lichSuApp = null;
+
+async function khoiTaoLichSu() {
+  // Quá 5 giây chưa kết nối được Firebase -> coi như khách
+  const hetGio = setTimeout(() => { if (!lichSuApp) veLichSuKhach(); }, 5000);
+  lichSuApp = await sanSang;
+  clearTimeout(hetGio);
+  lichSuApp.theoDoi(veLichSu);        // vẽ lại mỗi khi đăng nhập / đăng xuất
+}
+
+function veLichSuKhach() {
+  document.getElementById("historyList").innerHTML = `
+    <div class="history-empty">
+      <p>Đăng nhập để lưu lại các bài bạn đã mô phỏng và mở lại bất cứ lúc nào.</p>
+      <a class="btn primary full" href="dang-nhap.html">Đăng nhập</a>
+    </div>`;
+}
+
+async function veLichSu() {
+  const khung = document.getElementById("historyList");
+  const trangThai = lichSuApp.trangThai();
+  if (trangThai === "dang-tai") { khung.innerHTML = `<p class="history-empty">Đang tải...</p>`; return; }
+  if (trangThai === "khach") { veLichSuKhach(); return; }
+
+  let ds;
+  try { ds = await lichSuApp.layLichSu(30); }
+  catch (e) { console.error(e); khung.innerHTML = `<p class="history-empty">Không tải được lịch sử.</p>`; return; }
+
+  if (!ds.length) {
+    khung.innerHTML = `<p class="history-empty">Chưa có bài nào. Chọn một thuật toán ở menu phía trên rồi bấm "Bắt đầu mô phỏng".</p>`;
+    return;
+  }
+
+  // Chia nhóm theo ngày: Hôm nay / Hôm qua / 7 ngày qua / Cũ hơn
+  const nhom = {};
+  ds.forEach((h, i) => { (nhom[tenNgay(h.createdAt)] ||= []).push({ ...h, i }); });
+
+  khung.innerHTML = Object.entries(nhom).map(([ten, muc]) => `
+    <div class="history-day">${ten}</div>
+    ${muc.map(h => `
+      <button class="history-item" data-i="${h.i}" title="${escapeHtml(h.algoName)}">
+        <span class="history-algo">${escapeHtml(h.algoName)}</span>
+        <span class="history-sub">${escapeHtml(tomTatDuLieu(h.values))}</span>
+      </button>`).join("")}`).join("")
+    + `<a class="history-all" href="tai-khoan.html">Xem tất cả →</a>`;
+
+  // Bấm 1 mục -> mở đúng thuật toán và điền lại dữ liệu cũ
+  khung.querySelectorAll(".history-item").forEach(nut => nut.onclick = () => {
+    const h = ds[nut.dataset.i];
+    document.body.classList.remove("menu-open");
+    if (currentAlgo?.id === h.algoId && location.hash.startsWith("#/algo/")) {
+      dienDuLieu(h.values);
+      addLog("Đã nạp lại dữ liệu từ lịch sử. Bấm \"Bắt đầu mô phỏng\" để chạy.");
+    } else {
+      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: h.algoId, values: h.values })); } catch (e) {}
+      location.hash = `#/algo/${h.algoId}`;
+    }
+  });
+}
+
+function tenNgay(ts) {
+  if (!ts?.toDate) return "Hôm nay";
+  const ngay = ts.toDate(); ngay.setHours(0, 0, 0, 0);
+  const homNay = new Date(); homNay.setHours(0, 0, 0, 0);
+  const cach = Math.round((homNay - ngay) / 86400000);
+  if (cach <= 0) return "Hôm nay";
+  if (cach === 1) return "Hôm qua";
+  if (cach < 7) return "7 ngày qua";
+  return "Cũ hơn";
+}
+
+// { n: "4", matrix: "0 1\n1 0" } -> "n = 4 · ma trận 2×2"
+function tomTatDuLieu(values = {}) {
+  return Object.entries(values).map(([k, v]) => {
+    v = String(v);
+    if (v.includes("\n")) {
+      const hang = v.trim().split("\n");
+      return `ma trận ${hang.length}×${hang[0].trim().split(/\s+/).length}`;
+    }
+    return /^[a-z]\w*$/i.test(k) && k.length <= 5 && !isNaN(v) ? `${k} = ${v}` : v;
+  }).join(" · ");
+}
+
+// Menu ngang trên cùng: mỗi nhóm là 1 mục, rê chuột vào thì thả xuống danh sách thuật toán
+function renderTopNav() {
+  document.getElementById("topnav").innerHTML = GROUPS.map(g => `
+    <div class="dropdown" data-group="${g.id}">
+      <button class="dropdown-btn">
+        <span class="nav-icon">${NAV_ICONS[g.id]}</span>
+        <span class="nav-label">${g.name}</span>
+      </button>
+      <div class="dropdown-menu">
+        ${ALGORITHMS.filter(a => a.group === g.id)
+          .map(a => `<a href="#/algo/${a.id}">${a.name}</a>`).join("")}
+      </div>
+    </div>`).join("");
 }
 
 // Tô sáng mục đang chọn trong menu
@@ -27,21 +138,35 @@ function highlightNav(id) {
   document.querySelectorAll(".nav-link").forEach(link => {
     link.classList.toggle("active", link.dataset.id === id);
   });
+  const algo = ALGORITHMS.find(a => a.id === id);
+  document.querySelectorAll(".dropdown").forEach(d => {
+    d.classList.toggle("active", !!algo && d.dataset.group === algo.group);
+  });
 }
 
 /* ---------- 2. ĐIỀU HƯỚNG ----------
    Dùng phần sau dấu # trên địa chỉ web:
-   #/            -> trang chủ
-   #/algo/nhau   -> trang thuật toán n quân hậu            */
+   #/                      -> trang chủ
+   #/algo/nhau             -> trang thuật toán n quân hậu
+   #/algo/nhau/ly-thuyet   -> trang thuật toán, mở sẵn tab Lý thuyết
+   #/huong-dan/mo-phong    -> trang hướng dẫn 1 tính năng            */
 function router() {
   stopAutoPlay();
   const hash = location.hash || "#/";
   const parts = hash.split("/");          // ["#", "algo", "nhau"]
-  if (parts[1] === "algo") {
-    const algo = ALGORITHMS.find(a => a.id === parts[2]);
-    if (algo) { renderAlgoPage(algo); highlightNav(algo.id); }
-    else renderHome();
+  const algo = parts[1] === "algo" ? ALGORITHMS.find(a => a.id === parts[2]) : null;
+  const huongDan = parts[1] === "huong-dan" ? FEATURES.find(f => f.id === parts[2]) : null;
+  if (algo) {
+    document.body.classList.remove("home");   // trang thuật toán: hiện menu bên trái
+    renderAlgoPage(algo);
+    highlightNav(algo.id);
+    if (parts[3] === "ly-thuyet") document.querySelector('.tab[data-tab="theory"]').click();
+  } else if (huongDan) {
+    document.body.classList.add("home");      // trang hướng dẫn: dàn rộng như trang chủ
+    renderGuide(huongDan);
+    highlightNav(null);
   } else {
+    document.body.classList.add("home");      // trang chủ: ẩn menu bên trái, dàn rộng toàn trang
     renderHome();
     highlightNav(null);
   }
@@ -50,27 +175,216 @@ function router() {
 }
 
 /* ---------- TRANG CHỦ ---------- */
-function renderHome() {
-  let html = `
-    <section class="hero">
-      <h1>Học thuật toán Toán rời rạc bằng hình ảnh</h1>
-      <p>Chọn một thuật toán, nhập dữ liệu và xem thuật toán chạy từng bước:
-         quay lui, quy hoạch động, nhánh cận và đồ thị.</p>
-    </section>`;
+/* Các tính năng giới thiệu ở trang chủ. Bấm vào -> trang hướng dẫn #/huong-dan/{id}
+   steps: các bước sử dụng; meo: mẹo nhỏ; thu: bài để bấm "Thử ngay" (tab: mở sẵn tab nào) */
+const FEATURES = [
+  { id: "mo-phong", icon: "▶", title: "Mô phỏng từng bước",
+    text: "Xem thuật toán chạy chậm từng bước, có thể tiến, lùi hoặc tự chạy.",
+    steps: [
+      "Chọn một bài toán: bấm vào thẻ ở trang chủ hoặc chọn trên thanh menu phía trên.",
+      "Nhập dữ liệu ở cột bên trái (hoặc giữ nguyên dữ liệu mặc định).",
+      "Bấm <b>▶ Bắt đầu mô phỏng</b>. Hình vẽ ở giữa hiện bước đầu tiên.",
+      "Bấm <b>Tiếp ▶</b> để đi tới 1 bước, <b>◀ Lùi</b> để quay lại bước trước.",
+      "Bấm <b>▶ Tự chạy</b> để web tự đi hết các bước; kéo thanh <b>Tốc độ</b> để chạy nhanh hoặc chậm hơn. Bấm <b>⏸ Dừng</b> để tạm dừng.",
+      "Bấm <b>⟲</b> để xóa kết quả và làm lại từ đầu."
+    ],
+    meo: "Ô \"Bước 3 / 15\" ở góc dưới cho biết bạn đang ở bước nào trên tổng số bước.",
+    thu: { algo: "hanoi" } },
 
-  for (const g of GROUPS) {
-    html += `<h2 class="group-heading">${g.icon} ${g.name}</h2><div class="cards">`;
-    for (const a of ALGORITHMS.filter(x => x.group === g.id)) {
-      html += `
-        <a class="card" href="#/algo/${a.id}">
-          <h3>${a.name}</h3>
-          <p>${a.short}</p>
-          <span class="badge">${a.complexity}</span>
-        </a>`;
-    }
-    html += `</div>`;
+  { id: "ma-gia", icon: "≡", title: "Mã giả tô sáng",
+    text: "Dòng mã giả đang thực hiện được tô sáng để dễ theo dõi.",
+    steps: [
+      "Mở một bài toán bất kỳ. Khung <b>Mã giả</b> nằm ở cột bên phải.",
+      "Bắt đầu mô phỏng. Dòng đang được thực hiện sẽ được <b>tô vàng</b>.",
+      "Mỗi lần bấm Tiếp hoặc Lùi, dòng tô vàng di chuyển theo đúng bước đó.",
+      "Đọc khung <b>Giải thích từng bước</b> ngay bên dưới để biết ở bước đó thuật toán làm gì."
+    ],
+    meo: "Vừa nhìn hình vẽ ở giữa vừa nhìn dòng tô vàng giúp bạn nối được \"code\" với \"hình\", đây là cách nhớ thuật toán nhanh nhất.",
+    thu: { algo: "nhau" } },
+
+  { id: "nhap-du-lieu", icon: "✎", title: "Tự nhập dữ liệu",
+    text: "Nhập số, danh sách hoặc ma trận của riêng bạn để web giải.",
+    steps: [
+      "<b>Số</b> (ví dụ số đĩa n, kích thước bàn cờ): gõ trực tiếp vào ô.",
+      "<b>Danh sách</b> (ví dụ trọng lượng đồ vật): các số cách nhau bằng dấu phẩy, ví dụ <code>3, 4, 5, 2</code>.",
+      "<b>Ma trận</b> (đồ thị, bảng chi phí): mỗi dòng là 1 hàng, các số cách nhau bằng dấu cách. Số <code>0</code> nghĩa là không có cạnh.",
+      "Nhập xong bấm <b>▶ Bắt đầu mô phỏng</b> để web giải theo dữ liệu của bạn."
+    ],
+    vidu: "0 4 1 0\n4 0 2 5\n1 2 0 8\n0 5 8 0",
+    meo: "Nên nhập dữ liệu nhỏ (4 đến 6 đỉnh, n ≤ 8) để hình vẽ dễ nhìn và mô phỏng không quá dài.",
+    thu: { algo: "dijkstra" } },
+
+  { id: "vi-du", icon: "★", title: "Ví dụ có sẵn",
+    text: "Mỗi thuật toán có sẵn các bài mẫu, bấm một nút là chạy.",
+    steps: [
+      "Mở một bài toán, nhìn mục <b>Ví dụ có sẵn</b> ở cột bên trái.",
+      "Bấm vào tên một ví dụ: dữ liệu được điền sẵn vào các ô.",
+      "Bấm <b>▶ Bắt đầu mô phỏng</b> để chạy ví dụ đó.",
+      "Bấm <b>Mặc định</b> để quay về dữ liệu ban đầu."
+    ],
+    meo: "Đăng nhập để mỗi bài bạn đã chạy được lưu vào cột Lịch sử bên trái, lần sau bấm vào là mở lại ngay.",
+    thu: { algo: "hanoi" } },
+
+  { id: "ly-thuyet", icon: "✦", title: "Lý thuyết ngắn gọn",
+    text: "Ý tưởng, mã giả và độ phức tạp của từng thuật toán.",
+    steps: [
+      "Mở một bài toán, bấm tab <b>Lý thuyết</b> (ngay cạnh tab Mô phỏng).",
+      "Đọc phần <b>Ý tưởng</b> để hiểu thuật toán giải bài toán theo cách nào.",
+      "Xem <b>Mã giả</b> đầy đủ và <b>Độ phức tạp</b> (thuật toán chạy nhanh hay chậm khi dữ liệu lớn).",
+      "Quay lại tab <b>Mô phỏng</b> để xem thuật toán chạy thật."
+    ],
+    meo: "Nên đọc lý thuyết trước rồi mới mô phỏng: bạn sẽ đoán trước được bước tiếp theo và hiểu sâu hơn.",
+    thu: { algo: "bfsdfs", tab: "ly-thuyet" } },
+
+  { id: "so-sanh", icon: "⇄", title: "So sánh kỹ thuật",
+    text: "So sánh đệ quy thường với quy hoạch động, quay lui với nhánh cận.",
+    steps: [
+      "Mở bài <b>Fibonacci</b>, ở ô <b>Cách giải</b> chọn \"Đệ quy thường\" rồi mô phỏng, ghi lại số bước.",
+      "Đổi sang \"Quy hoạch động\" và mô phỏng lại với cùng n.",
+      "So sánh số bước: quy hoạch động không tính lại các giá trị đã có nên ít bước hơn hẳn.",
+      "Với bài <b>Người du lịch (TSP)</b>: các nhánh bị <b>cắt bỏ</b> (vì chắc chắn không tốt hơn kết quả đang có) được tô xám, cho thấy nhánh cận nhanh hơn quay lui thường."
+    ],
+    meo: "Thử với n lớn dần (5, 6, 7...) để thấy khoảng cách giữa hai cách giải tăng rất nhanh.",
+    thu: { algo: "fibonacci" } }
+];
+
+/* ---------- TRANG HƯỚNG DẪN ---------- */
+function renderGuide(f) {
+  const algo = ALGORITHMS.find(a => a.id === f.thu.algo);
+  const linkThu = `#/algo/${algo.id}${f.thu.tab ? "/" + f.thu.tab : ""}`;
+  app.innerHTML = `
+    <div class="guide">
+      <a class="guide-back" href="#/">← Trang chủ</a>
+      <div class="guide-head">
+        <span class="feature-icon big">${f.icon}</span>
+        <div>
+          <span class="crumb">Hướng dẫn sử dụng</span>
+          <h1>${f.title}</h1>
+          <p>${f.text}</p>
+        </div>
+      </div>
+
+      <ol class="guide-steps">
+        ${f.steps.map(s => `<li>${s}</li>`).join("")}
+      </ol>
+
+      ${f.vidu ? `<div class="guide-example"><span>Ví dụ ma trận 4 đỉnh:</span><pre>${f.vidu}</pre></div>` : ""}
+
+      <div class="guide-tip"><b>Mẹo:</b> ${f.meo}</div>
+
+      <a class="btn primary guide-try" href="${linkThu}">Thử ngay với bài "${algo.name}" →</a>
+
+      <h3 class="guide-others-title">Hướng dẫn khác</h3>
+      <div class="guide-others">
+        ${FEATURES.filter(x => x.id !== f.id).map(x => `
+          <a href="#/huong-dan/${x.id}"><span class="feature-icon">${x.icon}</span>${x.title}</a>`).join("")}
+      </div>
+    </div>
+    <footer class="footer">
+      Đồ án cơ sở ngành · Khoa Công nghệ Thông tin · Trường Đại học Nha Trang
+    </footer>`;
+}
+
+let homeGroup = "quaylui";   // nhóm đang chọn ở trang chủ
+
+function renderHome() {
+  app.innerHTML = `
+    <!-- KHỐI ĐẦU TRANG: tiêu đề + ô tìm kiếm + nhóm chủ đề -->
+    <section class="hero">
+      <h1>Máy mô phỏng thuật toán</h1>
+      <p>Nhập tên bài toán hoặc chọn chủ đề để xem thuật toán chạy từng bước</p>
+
+      <form class="search" id="searchForm" autocomplete="off">
+        <input id="searchInput" type="text" placeholder="Ví dụ: tháp hà nội, n quân hậu, dijkstra...">
+        <button type="submit" class="search-btn">Mô phỏng</button>
+        <div class="suggest" id="suggest"></div>
+      </form>
+
+      <div class="group-tabs" id="groupTabs">
+        ${GROUPS.map(g => `<button class="group-tab" data-group="${g.id}">${g.icon} ${g.name}</button>`).join("")}
+      </div>
+      <div class="topic-chips" id="topicChips"></div>
+    </section>
+
+    <!-- THẺ TỪNG THUẬT TOÁN: hình minh họa + tên + mô tả, bấm vào là mở trang mô phỏng -->
+    <section class="algo-section">
+      <h2>Học thuật toán đơn giản hơn</h2>
+      <div class="algo-grid">
+        ${ALGORITHMS.map(a => {
+          const hinh = MINH_HOA[a.id] || { mau: "#34403a", svg: "" };
+          return `
+          <a class="algo-card" href="#/algo/${a.id}">
+            <div class="algo-art" style="background:${hinh.mau}">
+              <svg viewBox="0 0 200 200" aria-hidden="true">${hinh.svg}</svg>
+            </div>
+            <h3>${a.name}</h3>
+            <p>${a.short}</p>
+          </a>`;
+        }).join("")}
+      </div>
+    </section>
+
+    <!-- ĐIỂM NỔI BẬT -->
+    <section class="features">
+      ${FEATURES.map(f => `
+        <a class="feature" href="#/huong-dan/${f.id}">
+          <span class="feature-icon">${f.icon}</span>
+          <div><strong>${f.title}</strong><p>${f.text}</p>
+            <span class="feature-more">Xem hướng dẫn →</span></div>
+        </a>`).join("")}
+    </section>
+
+    <footer class="footer">
+      Đồ án cơ sở ngành · Khoa Công nghệ Thông tin · Trường Đại học Nha Trang
+    </footer>`;
+
+  // Bấm vào nhóm -> đổi danh sách bài toán bên dưới
+  document.querySelectorAll(".group-tab").forEach(tab => {
+    tab.onclick = () => { homeGroup = tab.dataset.group; renderTopicChips(); };
+  });
+  renderTopicChips();
+
+  // Ô tìm kiếm: gõ tới đâu gợi ý tới đó, Enter thì mở bài khớp nhất
+  const input = document.getElementById("searchInput");
+  input.oninput = () => renderSuggest(input.value);
+  document.getElementById("searchForm").onsubmit = e => {
+    e.preventDefault();
+    const found = searchAlgorithms(input.value);
+    if (found.length) location.hash = `#/algo/${found[0].id}`;
+    else renderSuggest(input.value, true);
+  };
+}
+
+function renderTopicChips() {
+  document.querySelectorAll(".group-tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.group === homeGroup));
+  document.getElementById("topicChips").innerHTML = ALGORITHMS
+    .filter(a => a.group === homeGroup)
+    .map(a => `<a class="topic-chip" href="#/algo/${a.id}">${a.name}</a>`).join("");
+}
+
+// Bỏ dấu tiếng Việt để tìm "thap ha noi" vẫn ra "Tháp Hà Nội"
+function boDau(s) {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+}
+
+function searchAlgorithms(text) {
+  const q = boDau(text.trim());
+  if (!q) return [];
+  return ALGORITHMS.filter(a => {
+    const group = GROUPS.find(g => g.id === a.group).name;
+    return boDau(a.name + " " + a.short + " " + group).includes(q);
+  });
+}
+
+function renderSuggest(text, showEmpty = false) {
+  const box = document.getElementById("suggest");
+  const found = searchAlgorithms(text);
+  if (found.length) {
+    box.innerHTML = found.map(a => `<a href="#/algo/${a.id}">${a.name}</a>`).join("");
+  } else {
+    box.innerHTML = showEmpty && text.trim() ? `<span>Không tìm thấy bài toán phù hợp</span>` : "";
   }
-  app.innerHTML = html;
 }
 
 /* ---------- 3. TRANG THUẬT TOÁN ---------- */
@@ -101,9 +415,7 @@ function renderAlgoPage(algo) {
           <h3>Dữ liệu đầu vào</h3>
           <form id="inputForm">${algo.inputs.map(renderInput).join("")}</form>
           <h4>Ví dụ có sẵn</h4>
-          <div class="examples">
-            ${[1, 2, 3, 4, 5].map(i => `<button class="chip" data-ex="${i}">Ví dụ ${i}</button>`).join("")}
-          </div>
+          <div class="examples" id="examples"><small class="hint">Đang tải ví dụ...</small></div>
           <button class="btn primary full" id="btnRun">▶ Bắt đầu mô phỏng</button>
         </aside>
 
@@ -151,6 +463,55 @@ function renderAlgoPage(algo) {
 
   bindAlgoEvents();
   resetSimulation();
+  napLaiTuLichSu(algo);
+  taiViDu(algo);
+}
+
+/* ---------- Ví dụ có sẵn (admin nhập trong trang Quản trị -> Ví dụ bài toán) ---------- */
+async function taiViDu(algo) {
+  let ds = [];
+  try {
+    // Chờ Firebase tối đa 5 giây; quá thì coi như không có ví dụ
+    const App = await Promise.race([sanSang, new Promise((_, loi) => setTimeout(loi, 5000))]);
+    ds = await App.layViDu(algo.id);
+  } catch (e) { /* không tải được -> dùng dữ liệu mặc định */ }
+
+  if (currentAlgo !== algo) return;          // người dùng đã chuyển sang bài khác
+  const khung = document.getElementById("examples");
+  khung.innerHTML =
+    `<button class="chip" data-mac-dinh>Mặc định</button>` +
+    ds.map((v, i) => `<button class="chip" data-ex="${i}">${escapeHtml(v.tieuDe)}</button>`).join("");
+
+  khung.querySelector("[data-mac-dinh]").onclick = () => {
+    dienDuLieu(Object.fromEntries(algo.inputs.map(i => [i.key, i.value ?? i.options?.[0]])));
+    addLog("Đã nạp dữ liệu mặc định.");
+  };
+  khung.querySelectorAll("[data-ex]").forEach(chip => chip.onclick = () => {
+    const v = ds[chip.dataset.ex];
+    dienDuLieu(v.values);
+    addLog(`Đã nạp "${v.tieuDe}". Bấm "Bắt đầu mô phỏng" để chạy.`);
+  });
+}
+
+// Điền dữ liệu vào form: { n: "4", matrix: "0 1\n1 0" }
+function dienDuLieu(values = {}) {
+  resetSimulation();
+  for (const [key, val] of Object.entries(values)) {
+    const el = document.querySelector(`#inputForm [name="${key}"]`);
+    if (el && val != null) el.value = val;
+  }
+}
+
+// Bấm "Mô phỏng lại" ở trang Tài khoản -> dữ liệu được gửi qua sessionStorage
+function napLaiTuLichSu(algo) {
+  try {
+    const luu = JSON.parse(sessionStorage.getItem("napLai") || "null");
+    if (luu?.algoId === algo.id) {
+      sessionStorage.removeItem("napLai");
+      dienDuLieu(luu.values);
+      addLog("Đã nạp lại dữ liệu từ lịch sử.");
+    }
+  } catch (e) {}
 }
 
 // Tạo 1 ô nhập liệu theo kiểu
@@ -177,14 +538,6 @@ function bindAlgoEvents() {
       document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
       document.getElementById("tab-sim").classList.toggle("hidden", tab.dataset.tab !== "sim");
       document.getElementById("tab-theory").classList.toggle("hidden", tab.dataset.tab !== "theory");
-    };
-  });
-
-  // Nạp ví dụ có sẵn (tạm thời: nạp lại dữ liệu mặc định)
-  document.querySelectorAll(".chip").forEach(chip => {
-    chip.onclick = () => {
-      renderAlgoPage(currentAlgo);
-      addLog(`Đã nạp Ví dụ ${chip.dataset.ex} (sẽ thêm dữ liệu thật sau).`);
     };
   });
 
@@ -241,6 +594,14 @@ function startSimulation() {
   sim.index = -1;
   document.getElementById("log").innerHTML = "";
   goToStep(0);
+
+  // Đã đăng nhập thì lưu lần mô phỏng này vào lịch sử (khách thì bỏ qua)
+  const algo = currentAlgo;
+  const raw = Object.fromEntries(algo.inputs.map(inp =>
+    [inp.key, document.querySelector(`#inputForm [name="${inp.key}"]`).value]));
+  sanSang.then(App => App.luuLichSu(algo, raw))
+    .then(daLuu => { if (daLuu) veLichSu(); })            // có mục mới -> cập nhật cột lịch sử
+    .catch(e => console.warn("Không lưu được lịch sử:", e));
 }
 
 function resetSimulation() {
@@ -324,5 +685,6 @@ function escapeHtml(s) {
 /* ---------- KHỞI ĐỘNG ---------- */
 document.getElementById("menuBtn").onclick = () => document.body.classList.toggle("menu-open");
 window.addEventListener("hashchange", router);
+renderTopNav();
 renderSidebar();
 router();

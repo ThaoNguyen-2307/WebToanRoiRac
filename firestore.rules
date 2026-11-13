@@ -1,0 +1,53 @@
+// =========================================================
+// firestore.rules — LUẬT BẢO MẬT CƠ SỞ DỮ LIỆU
+// Dán toàn bộ file này vào: Firebase Console -> Firestore Database -> Rules -> Publish
+//
+// Các bảng (collection):
+//   users/{uid}                 hồ sơ tài khoản (vaiTro: "user" | "admin", biKhoa)
+//   users/{uid}/history/{id}    lịch sử mô phỏng của từng người
+//   examples/{id}               ví dụ có sẵn của từng thuật toán (admin quản lý)
+// =========================================================
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function daDangNhap() {
+      return request.auth != null;
+    }
+    function laAdmin() {
+      return daDangNhap() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.vaiTro == 'admin';
+    }
+
+    match /users/{uid} {
+      // Xem hồ sơ: chính chủ hoặc admin
+      allow read: if daDangNhap() && (request.auth.uid == uid || laAdmin());
+
+      // Tạo hồ sơ lần đầu: chỉ được tạo cho chính mình, luôn là "user" và không bị khóa
+      allow create: if daDangNhap() && request.auth.uid == uid
+                    && request.resource.data.vaiTro == 'user'
+                    && request.resource.data.biKhoa == false;
+
+      // Sửa: admin sửa được hết; chính chủ sửa được hồ sơ nhưng KHÔNG được tự đổi vaiTro, biKhoa
+      allow update: if laAdmin() ||
+                    (daDangNhap() && request.auth.uid == uid &&
+                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['vaiTro', 'biKhoa']));
+
+      // Lịch sử mô phỏng: chỉ chính chủ được xem, thêm, xóa
+      match /history/{id} {
+        allow read, create, delete: if daDangNhap() && request.auth.uid == uid;
+      }
+    }
+
+    // Admin được xem lịch sử của mọi người (để làm thống kê)
+    match /{path=**}/history/{id} {
+      allow read: if laAdmin();
+    }
+
+    // Ví dụ có sẵn: ai cũng xem được, chỉ admin được thêm / sửa / xóa
+    match /examples/{id} {
+      allow read: if true;
+      allow write: if laAdmin();
+    }
+  }
+}
