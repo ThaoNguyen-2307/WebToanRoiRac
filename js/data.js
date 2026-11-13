@@ -26,8 +26,13 @@ const ALGORITHMS = [
     inputs: [
       { key: "type", label: "Bài toán", type: "select",
         options: ["Dãy nhị phân n bit", "Hoán vị của n phần tử", "Tổ hợp chập m của n"] },
-      { key: "n", label: "n", type: "number", value: 3, min: 1, max: 6 },
-      { key: "m", label: "m (cho tổ hợp)", type: "number", value: 2, min: 1, max: 6 }
+      { key: "n", label: "n", type: "number", value: 3,
+        hint: "Nên chọn n nhỏ để dễ theo dõi (hoán vị nên ≤ 5); n càng lớn số bước tăng rất nhanh." },
+      // hienKhi: ô m chỉ hiện khi ô "type" đang chọn "Tổ hợp chập m của n"
+      { key: "m", label: "m", type: "number", value: 2, hint: "Cần m ≤ n.",
+        hienKhi: { key: "type", giaTri: "Tổ hợp chập m của n" } },
+      { key: "cheDo", label: "Hiển thị", type: "select",
+        options: ["Chi tiết từng dòng mã giả", "Chỉ các cấu hình tìm được"] }
     ],
     pseudo: [
       "Try(i):",
@@ -38,7 +43,38 @@ const ALGORITHMS = [
       "      else: Try(i + 1)",
       "      bỏ ghi nhận j  // quay lui"
     ],
-    complexity: "Nhị phân O(2ⁿ), hoán vị O(n!)"
+    complexity: "Nhị phân O(2ⁿ), hoán vị O(n!)",
+    // Mã giả cụ thể cho từng dạng (theo ô "type"). Giữ đủ 7 dòng, cùng thứ tự với mã giả chung ở trên.
+    maGiaTheo: {
+      key: "type",
+      "Dãy nhị phân n bit": [
+        "Try(i):",
+        "  for j in {0, 1}:",
+        "    // 0 và 1 luôn hợp lệ",
+        "    x[i] = j",
+        "    if i == n: in cấu hình x",
+        "    else: Try(i + 1)",
+        "    // quay lui, thử j tiếp theo"
+      ],
+      "Hoán vị của n phần tử": [
+        "Try(i):",
+        "  for j = 1..n:",
+        "    if daDung[j] == false:",
+        "      x[i] = j; daDung[j] = true",
+        "      if i == n: in cấu hình x",
+        "      else: Try(i + 1)",
+        "      daDung[j] = false //quay lui"
+      ],
+      "Tổ hợp chập m của n": [
+        "Try(i):        // x[0] = 0",
+        "  for j = x[i-1]+1 .. n-m+i:",
+        "    // j > x[i-1] nên luôn hợp lệ",
+        "    x[i] = j",
+        "    if i == m: in cấu hình x",
+        "    else: Try(i + 1)",
+        "    // quay lui, thử j tiếp theo"
+      ]
+    }
   },
   {
     id: "nhau",
@@ -46,7 +82,11 @@ const ALGORITHMS = [
     group: "quaylui",
     short: "Đặt n quân hậu lên bàn cờ n×n sao cho không con nào ăn được nhau.",
     inputs: [
-      { key: "n", label: "Kích thước bàn cờ n", type: "number", value: 4, min: 4, max: 8 }
+      { key: "n", label: "Kích thước bàn cờ n", type: "number", value: 4,
+        hint: "Nên chọn 4 đến 8. Với n = 2 hoặc 3 bài toán không có lời giải." },
+      { key: "timKiem", label: "Tìm", type: "select", options: ["Lời giải đầu tiên", "Tất cả lời giải"] },
+      { key: "cheDo", label: "Hiển thị", type: "select",
+        options: ["Chi tiết từng dòng mã giả", "Chỉ các lần đặt / gỡ hậu"] }
     ],
     pseudo: [
       "Try(i):",
@@ -65,7 +105,10 @@ const ALGORITHMS = [
     group: "quaylui",
     short: "Chuyển n đĩa từ cọc A sang cọc C, không đặt đĩa to lên đĩa nhỏ.",
     inputs: [
-      { key: "n", label: "Số đĩa n", type: "number", value: 3, min: 1, max: 7 }
+      { key: "n", label: "Số đĩa n", type: "number", value: 3,
+        hint: "Nên chọn 3 đến 7 đĩa. n đĩa cần 2ⁿ − 1 lần chuyển." },
+      { key: "cheDo", label: "Hiển thị", type: "select",
+        options: ["Chi tiết từng dòng mã giả", "Chỉ các lần chuyển đĩa"] }
     ],
     pseudo: [
       "hanoi(n, A, B, C):",
@@ -182,3 +225,29 @@ const ALGORITHMS = [
     complexity: "O(V²)"
   }
 ];
+
+/* =========================================================
+   CHỖ ĐĂNG KÝ THUẬT TOÁN (dùng chung)
+   SOLVERS[id](input) -> mảng các bước: { line, msg, state }
+     line : số thứ tự dòng mã giả cần tô sáng (bắt đầu từ 0)
+     msg  : lời giải thích của bước đó
+     state: dữ liệu để vẽ hình ở bước đó
+   VE[id](step) -> chuỗi HTML vẽ trạng thái của 1 bước
+   Mỗi thuật toán viết trong 1 file riêng ở js/thuat-toan/ (VD: hanoi.js)
+   ========================================================= */
+const SOLVERS = {};
+const VE = {};
+
+// Hàm giải gọi loiDuLieu(...) khi dữ liệu sai ràng buộc riêng, web sẽ hiện thông báo dưới ô nhập
+function loiDuLieu(key, thongBao) {
+  const e = new Error(thongBao);
+  e.key = key;
+  throw e;
+}
+
+// Số bước mô phỏng tối đa. Vượt quá sẽ báo "dữ liệu quá lớn" thay vì làm treo trình duyệt
+const GIOI_HAN_BUOC = 100000;
+function kiemTraSoBuoc(steps) {
+  if (steps.length >= GIOI_HAN_BUOC)
+    loiDuLieu("n", `Dữ liệu quá lớn: mô phỏng cần hơn ${GIOI_HAN_BUOC.toLocaleString("vi-VN")} bước, trình duyệt sẽ bị treo. Hãy nhập n nhỏ hơn.`);
+}

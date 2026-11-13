@@ -415,6 +415,7 @@ function renderAlgoPage(algo) {
         <aside class="panel">
           <h3>Dữ liệu đầu vào</h3>
           <form id="inputForm">${algo.inputs.map(renderInput).join("")}</form>
+          <div class="alert loi" id="loiNhap" hidden></div>
           <h4>Ví dụ có sẵn</h4>
           <div class="examples" id="examples"><small class="hint">Đang tải ví dụ...</small></div>
           <button class="btn primary full" id="btnRun">▶ Bắt đầu mô phỏng</button>
@@ -439,10 +440,8 @@ function renderAlgoPage(algo) {
 
         <!-- Cột phải: mã giả + nhật ký -->
         <aside class="panel">
-          <h3>Mã giả</h3>
-          <pre class="pseudo" id="pseudo">${algo.pseudo
-            .map((line, i) => `<span class="line" data-line="${i}">${escapeHtml(line)}</span>`)
-            .join("\n")}</pre>
+          <h3>Mã giả <small class="ma-gia-ten" id="tenMaGia"></small></h3>
+          <pre class="pseudo" id="pseudo"></pre>
           <h3>Giải thích từng bước</h3>
           <ol class="log" id="log"></ol>
         </aside>
@@ -454,7 +453,7 @@ function renderAlgoPage(algo) {
       <div class="panel theory">
         <h3>Ý tưởng</h3>
         <p>${algo.short}</p>
-        <p class="todo">(Phần lý thuyết chi tiết sẽ viết ở đây: định nghĩa, cách hoạt động, ví dụ chạy tay.)</p>
+        ${algo.lyThuyet || `<p class="todo">(Phần lý thuyết chi tiết sẽ viết ở đây: định nghĩa, cách hoạt động, ví dụ chạy tay.)</p>`}
         <h3>Mã giả</h3>
         <pre class="pseudo">${escapeHtml(algo.pseudo.join("\n"))}</pre>
         <h3>Độ phức tạp</h3>
@@ -501,6 +500,8 @@ function dienDuLieu(values = {}) {
     const el = document.querySelector(`#inputForm [name="${key}"]`);
     if (el && val != null) el.value = val;
   }
+  capNhatOHien();
+  veMaGia();
 }
 
 // Bấm "Mô phỏng lại" ở trang Tài khoản -> dữ liệu được gửi qua sessionStorage
@@ -524,12 +525,43 @@ function renderInput(inp) {
     field = `<textarea name="${inp.key}" rows="5" spellcheck="false">${inp.value}</textarea>
              <small class="hint">Mỗi dòng là 1 hàng, các số cách nhau bởi dấu cách</small>`;
   } else if (inp.type === "number") {
-    field = `<input type="number" name="${inp.key}" value="${inp.value}" min="${inp.min}" max="${inp.max}">`;
+    field = `<input type="number" name="${inp.key}" value="${inp.value}" min="1" step="1">`;
   } else {
     field = `<input type="text" name="${inp.key}" value="${inp.value}">`;
   }
-  return `<label class="field"><span>${inp.label}</span>${field}</label>`;
+  const goiY = inp.hint ? `<small class="hint">${inp.hint}</small>` : "";
+  return `<label class="field" data-key="${inp.key}"><span>${inp.label}</span>${field}${goiY}</label>`;
 }
+
+/* Mã giả theo lựa chọn: nếu thuật toán có maGiaTheo (VD bài Liệt kê có 3 dạng),
+   hiện mã giả cụ thể của dạng đang chọn; không có thì dùng mã giả chung algo.pseudo.
+   Các dạng giữ cùng số dòng nên con số "line" của từng bước vẫn tô đúng dòng.      */
+function veMaGia() {
+  const khung = document.getElementById("pseudo");
+  if (!khung) return;
+  let dong = currentAlgo.pseudo, ten = "";
+  const theo = currentAlgo.maGiaTheo;
+  if (theo) {
+    const chon = document.querySelector(`#inputForm [name="${theo.key}"]`).value;
+    if (theo[chon]) { dong = theo[chon]; ten = chon; }
+  }
+  const dongDangTo = khung.querySelector(".line.current")?.dataset.line;
+  khung.innerHTML = dong
+    .map((d, i) => `<span class="line" data-line="${i}">${escapeHtml(d)}</span>`).join("\n");
+  document.getElementById("tenMaGia").textContent = ten ? `(${ten})` : "";
+  if (dongDangTo != null) highlightLine(Number(dongDangTo));   // giữ dòng đang tô vàng
+}
+
+// Ẩn/hiện các ô chỉ dùng cho một lựa chọn (khai báo bằng hienKhi trong data.js)
+function capNhatOHien() {
+  for (const inp of currentAlgo.inputs) {
+    if (!inp.hienKhi) continue;
+    const chon = document.querySelector(`#inputForm [name="${inp.hienKhi.key}"]`).value;
+    document.querySelector(`#inputForm .field[data-key="${inp.key}"]`).style.display =
+      chon === inp.hienKhi.giaTri ? "" : "none";
+  }
+}
+const oDangAn = key => document.querySelector(`#inputForm .field[data-key="${key}"]`)?.style.display === "none";
 
 // Gắn sự kiện cho các nút trên trang thuật toán
 function bindAlgoEvents() {
@@ -543,6 +575,15 @@ function bindAlgoEvents() {
   });
 
   document.getElementById("btnRun").onclick = startSimulation;
+  // Sửa dữ liệu: ẩn thông báo lỗi và xóa mô phỏng cũ (vì không còn đúng với dữ liệu mới)
+  document.getElementById("inputForm").oninput = () => {
+    baoLoiNhap(null);
+    capNhatOHien();
+    veMaGia();
+    if (sim.steps.length) resetSimulation();
+  };
+  capNhatOHien();
+  veMaGia();
   document.getElementById("btnNext").onclick = () => goToStep(sim.index + 1);
   document.getElementById("btnPrev").onclick = () => goToStep(sim.index - 1);
   document.getElementById("btnReset").onclick = resetSimulation;
@@ -569,14 +610,8 @@ function readInputs() {
 
 const sim = { steps: [], index: -1, timer: null };
 
-/* SOLVERS: nơi đặt hàm giải thật cho từng thuật toán (sẽ viết ở các tuần sau).
-   Ví dụ:
-   SOLVERS.hanoi = function (input) {
-     const steps = [];
-     ... chạy thuật toán, mỗi bước gọi steps.push({ line, msg, state }) ...
-     return steps;
-   };                                                                          */
-const SOLVERS = {};
+/* SOLVERS (hàm giải) và VE (hàm vẽ) được khai báo trong data.js,
+   mỗi thuật toán tự đăng ký trong file riêng ở js/thuat-toan/ (VD: hanoi.js). */
 
 // Bản mô phỏng tạm khi chưa có hàm giải: đi qua lần lượt từng dòng mã giả
 function demoSteps(algo) {
@@ -587,11 +622,46 @@ function demoSteps(algo) {
   }));
 }
 
+/* Kiểm tra dữ liệu nhập. Sai -> trả về { key, loi }, đúng -> null.
+   Ô số chỉ cần là số nguyên dương (không âm, không có chữ).
+   Các ràng buộc riêng (VD m ≤ n, dữ liệu quá lớn) do hàm giải tự báo bằng loiDuLieu(). */
+function kiemTraDuLieu(algo) {
+  for (const inp of algo.inputs) {
+    if (inp.type !== "number" || oDangAn(inp.key)) continue;     // ô đang ẩn thì không cần kiểm tra
+    const chu = document.querySelector(`#inputForm [name="${inp.key}"]`).value.trim();
+    const so = Number(chu);
+    if (chu === "" || !/^-?\d+$/.test(chu))
+      return { key: inp.key, loi: `"${inp.label}" phải là số nguyên, không được để trống hay chứa chữ cái.` };
+    if (so < 1)
+      return { key: inp.key, loi: `"${inp.label}" phải là số dương (lớn hơn 0), bạn nhập ${so}.` };
+  }
+  return null;
+}
+
+function baoLoiNhap(loi) {
+  const khung = document.getElementById("loiNhap");
+  khung.textContent = loi ? loi.loi : "";
+  khung.hidden = !loi;
+  document.querySelectorAll("#inputForm .field").forEach(f =>
+    f.classList.toggle("sai", !!loi && f.dataset.key === loi.key));
+}
+
+// Trả về true nếu bắt đầu mô phỏng được
 function startSimulation() {
   stopAutoPlay();
+  const loi = kiemTraDuLieu(currentAlgo);
+  baoLoiNhap(loi);
+  if (loi) { resetSimulation(); return false; }
+
   const input = readInputs();
   const solver = SOLVERS[currentAlgo.id];
-  sim.steps = solver ? solver(input) : demoSteps(currentAlgo);
+  try {
+    sim.steps = solver ? solver(input) : demoSteps(currentAlgo);
+  } catch (err) {                                   // hàm giải báo dữ liệu không hợp lệ
+    baoLoiNhap({ key: err.key, loi: err.message });
+    resetSimulation();
+    return false;
+  }
   sim.index = -1;
   document.getElementById("log").innerHTML = "";
   goToStep(0);
@@ -603,6 +673,7 @@ function startSimulation() {
   sanSang.then(App => App.luuLichSu(algo, raw))
     .then(daLuu => { if (daLuu) veLichSu(); })            // có mục mới -> cập nhật cột lịch sử
     .catch(e => console.warn("Không lưu được lịch sử:", e));
+  return true;
 }
 
 function resetSimulation() {
@@ -635,6 +706,11 @@ function goToStep(i) {
 
 // Vẽ trạng thái hiện tại lên khu vực mô phỏng (mỗi thuật toán sẽ có cách vẽ riêng)
 function drawState(step) {
+  const ve = VE[currentAlgo.id];
+  if (ve && step.state) {                     // thuật toán đã có hình vẽ riêng
+    document.getElementById("viz").innerHTML = `<div class="viz-content">${ve(step)}</div>`;
+    return;
+  }
   document.getElementById("viz").innerHTML = `
     <div class="viz-demo">
       <div class="viz-big">${sim.index + 1}</div>
@@ -657,7 +733,7 @@ function updateStepCount() {
 // Tự chạy: cứ sau một khoảng thời gian thì bấm "Tiếp" một lần
 function toggleAutoPlay() {
   if (sim.timer) { stopAutoPlay(); return; }
-  if (sim.steps.length === 0) startSimulation();
+  if (sim.steps.length === 0 && !startSimulation()) return;
   const speed = Number(document.getElementById("speed").value);   // 1 (chậm) .. 5 (nhanh)
   const delay = 1600 / speed;
   document.getElementById("btnPlay").textContent = "⏸ Dừng";

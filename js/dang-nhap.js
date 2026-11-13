@@ -4,6 +4,7 @@
    ========================================================= */
 import { auth, daCauHinh, BASE, layHoSo, theoDoiDangNhap, tamDung, loiTiengViet, thongBao }
   from "./firebase.js";
+import { themNutMat } from "./mat-khau.js";
 import {
   signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile,
   signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail
@@ -11,6 +12,7 @@ import {
 
 const formDangNhap = document.getElementById("formDangNhap");
 const formDangKy = document.getElementById("formDangKy");
+themNutMat();      // nút con mắt cho các ô mật khẩu
 
 /* ---------- Chuyển tab Đăng nhập <-> Đăng ký ---------- */
 function moTab(ten) {

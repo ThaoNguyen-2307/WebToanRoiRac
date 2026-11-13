@@ -11,6 +11,7 @@ import { db, yeuCauAdmin, veThanhNguoiDung, e, anhDaiDien, ngayGio,
 import { collection, collectionGroup, getDocs, doc, updateDoc, addDoc, deleteDoc,
          query, where, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { moDoiAnh } from "./anh-dai-dien.js";
 
 const main = document.getElementById("adminMain");
 const trangHienTai = document.body.dataset.page;
@@ -147,7 +148,8 @@ function veBangTaiKhoan(admin) {
       <tbody>${ds.map(u => {
         const laToi = u.uid === admin.uid;     // không cho tự đổi quyền / tự khóa chính mình
         return `<tr>
-          <td><div class="user-cell">${anhDaiDien(u.anh, u.ten)}
+          <td><div class="user-cell">
+              <button class="doi-anh nho" data-anh="${u.uid}" type="button" title="Đổi ảnh của ${e(u.ten)}">${anhDaiDien(u.anh, u.ten)}</button>
               <div><strong>${e(u.ten)}</strong>${laToi ? ` <span class="tag">Bạn</span>` : ""}<small>${e(u.email)}</small></div></div></td>
           <td>${tenCachDangNhap(u.dangNhapBang)}</td>
           <td><select data-vaitro="${u.uid}" ${laToi ? "disabled" : ""}>
@@ -165,6 +167,16 @@ function veBangTaiKhoan(admin) {
 
   document.querySelectorAll("[data-vaitro]").forEach(sel => sel.onchange = () =>
     capNhatTaiKhoan(admin, sel.dataset.vaitro, { vaiTro: sel.value }, "Đã đổi vai trò."));
+
+  // Bấm vào ảnh của 1 người dùng -> đổi ảnh đại diện cho người đó
+  document.querySelectorAll("[data-anh]").forEach(btn => btn.onclick = async () => {
+    const u = dsTaiKhoan.find(x => x.uid === btn.dataset.anh);
+    const anhMoi = await moDoiAnh(u.anh || "", u.ten);
+    if (anhMoi === null) return;
+    await capNhatTaiKhoan(admin, u.uid, { anh: anhMoi },
+      anhMoi ? `Đã đổi ảnh đại diện của ${u.ten}.` : `Đã xóa ảnh đại diện của ${u.ten}.`);
+    if (u.uid === admin.uid) veThanhNguoiDung(admin, u);    // đổi ảnh của chính mình -> cập nhật thanh menu
+  });
 
   document.querySelectorAll("[data-khoa]").forEach(btn => btn.onclick = () => {
     const u = dsTaiKhoan.find(x => x.uid === btn.dataset.khoa);
@@ -227,6 +239,16 @@ async function taiViDu() {
   }
 }
 
+// Hiện dữ liệu ví dụ bằng tên ô nhập (lấy từ data.js), bỏ các ô không dùng
+function tomTatViDu(values = {}) {
+  const algo = ALGORITHMS.find(a => a.id === algoDangChon);
+  return algo.inputs
+    .filter(inp => values[inp.key] != null && values[inp.key] !== "")
+    .filter(inp => !inp.hienKhi || values[inp.hienKhi.key] === inp.hienKhi.giaTri)
+    .map(inp => `${e(inp.label)} = ${e(String(values[inp.key]).replace(/\n/g, " / "))}`)
+    .join(" · ");
+}
+
 function veDanhSachViDu() {
   const du = dsViDu.length >= SO_VI_DU_YEU_CAU;
   document.getElementById("dsViDu").innerHTML = `
@@ -235,8 +257,7 @@ function veDanhSachViDu() {
     ${dsViDu.length ? `<ol class="example-list">${dsViDu.map(v => `
       <li>
         <div><strong>${e(v.tieuDe)}</strong>
-          <small>${Object.entries(v.values || {}).map(([k, x]) =>
-            `${e(k)} = ${e(String(x).replace(/\n/g, " / "))}`).join(" · ")}</small></div>
+          <small>${tomTatViDu(v.values)}</small></div>
         <div class="actions">
           <button class="btn sm" data-sua="${v.id}">Sửa</button>
           <button class="btn sm danger" data-xoa="${v.id}">Xóa</button>
@@ -256,7 +277,8 @@ function veDanhSachViDu() {
   });
 }
 
-// Form thêm / sửa: các ô nhập lấy đúng theo thuật toán trong data.js
+// Form thêm / sửa: các ô nhập lấy đúng theo thuật toán trong data.js,
+// cùng cách ẩn/hiện ô (hienKhi) và cùng cách kiểm tra dữ liệu như trang mô phỏng
 function veFormViDu() {
   const algo = ALGORITHMS.find(a => a.id === algoDangChon);
   const vd = dsViDu.find(v => v.id === dangSua);
@@ -264,34 +286,79 @@ function veFormViDu() {
 
   document.getElementById("formViDu").innerHTML = `
     <h3>${vd ? "Sửa ví dụ" : "Thêm ví dụ mới"}</h3>
-    <form id="fVD">
+    <form id="fVD" novalidate>
       <label class="field"><span>Tiêu đề</span>
         <input name="tieuDe" required maxlength="80" value="${e(vd?.tieuDe || `Ví dụ ${dsViDu.length + 1}`)}"></label>
       ${algo.inputs.map(inp => `
-        <label class="field"><span>${e(inp.label)}</span>
+        <label class="field" data-key="${inp.key}"><span>${e(inp.label)}</span>
           ${inp.type === "select"
             ? `<select name="${inp.key}">${inp.options.map(o =>
                 `<option ${o === giaTri(inp.key) ? "selected" : ""}>${e(o)}</option>`).join("")}</select>`
             : inp.type === "matrix"
               ? `<textarea name="${inp.key}" rows="5" spellcheck="false">${e(giaTri(inp.key))}</textarea>`
-              : `<input name="${inp.key}" type="${inp.type}" value="${e(giaTri(inp.key))}"
-                   ${inp.min != null ? `min="${inp.min}" max="${inp.max}"` : ""}>`}
+              : inp.type === "number"
+                ? `<input name="${inp.key}" type="number" min="1" step="1" value="${e(giaTri(inp.key))}">`
+                : `<input name="${inp.key}" type="text" value="${e(giaTri(inp.key))}">`}
+          ${inp.hint ? `<small class="hint">${e(inp.hint)}</small>` : ""}
         </label>`).join("")}
+      <div class="alert loi" id="loiVD" hidden></div>
       <div class="form-actions">
         <button class="btn primary">${vd ? "Lưu thay đổi" : "Thêm ví dụ"}</button>
         ${vd ? `<button type="button" class="btn" id="huySua">Hủy</button>` : ""}
       </div>
     </form>`;
 
+  const form = document.getElementById("fVD");
+  const oNhap = key => form.querySelector(`[name="${key}"]`);
+  const khungO = key => form.querySelector(`.field[data-key="${key}"]`);
+  const dangAn = key => khungO(key).style.display === "none";
+
+  // Ô có hienKhi (VD ô m chỉ dùng cho tổ hợp): chỉ hiện khi đang chọn đúng lựa chọn
+  function capNhatOHien() {
+    for (const inp of algo.inputs) {
+      if (inp.hienKhi) khungO(inp.key).style.display = oNhap(inp.hienKhi.key).value === inp.hienKhi.giaTri ? "" : "none";
+    }
+  }
+  function baoLoi(key, loi) {
+    const khung = document.getElementById("loiVD");
+    khung.textContent = loi || "";
+    khung.hidden = !loi;
+    form.querySelectorAll(".field").forEach(f => f.classList.toggle("sai", !!loi && f.dataset.key === key));
+  }
+  form.oninput = () => { capNhatOHien(); baoLoi(null, ""); };
+  capNhatOHien();
+
   const huy = document.getElementById("huySua");
   if (huy) huy.onclick = () => { dangSua = null; veFormViDu(); };
 
-  document.getElementById("fVD").onsubmit = async ev => {
+  form.onsubmit = async ev => {
     ev.preventDefault();
-    const f = ev.target.elements;
-    const values = {};
-    for (const inp of algo.inputs) values[inp.key] = f[inp.key].value.trim();
-    const duLieu = { algoId: algo.id, tieuDe: f.tieuDe.value.trim(), values };
+    const tieuDe = form.elements.tieuDe.value.trim();
+    if (!tieuDe) return baoLoi("tieuDe", "Vui lòng nhập tiêu đề.");
+
+    // 1. Lấy dữ liệu các ô đang hiện, kiểm tra ô số là số nguyên dương
+    const values = {}, input = {};
+    for (const inp of algo.inputs) {
+      if (dangAn(inp.key)) continue;                     // ô đang ẩn thì không lưu
+      const chu = oNhap(inp.key).value.trim();
+      if (inp.type === "number") {
+        if (!/^-?\d+$/.test(chu)) return baoLoi(inp.key, `"${inp.label}" phải là số nguyên, không được để trống hay chứa chữ cái.`);
+        if (Number(chu) < 1) return baoLoi(inp.key, `"${inp.label}" phải là số dương (lớn hơn 0), bạn nhập ${chu}.`);
+        input[inp.key] = Number(chu);
+      } else if (inp.type === "matrix") {
+        input[inp.key] = chu.split("\n").map(hang => hang.trim().split(/\s+/).map(Number));
+      } else input[inp.key] = chu;
+      values[inp.key] = chu;
+    }
+
+    // 2. Chạy thử thuật toán để bắt các ràng buộc riêng (VD m ≤ n, dữ liệu quá lớn)
+    const giai = SOLVERS[algo.id];
+    if (giai) {
+      try { giai(input); }
+      catch (err) { return baoLoi(err.key, err.message); }
+    }
+
+    const duLieu = { algoId: algo.id, tieuDe, values };
     try {
       if (vd) await updateDoc(doc(db, "examples", vd.id), duLieu);
       else await addDoc(collection(db, "examples"), { ...duLieu, ngayTao: serverTimestamp() });
