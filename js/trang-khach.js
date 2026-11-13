@@ -7,10 +7,12 @@
        layViDu(algoId)         -> danh sách ví dụ do admin nhập
        layLichSu(soLuong)      -> lịch sử mô phỏng của người đang đăng nhập (mới nhất trước)
        luuLichSu(algo, values) -> lưu 1 lần mô phỏng (chỉ khi đã đăng nhập)
+       layBaiLuu(algoId)       -> "Bài của tôi": dữ liệu người dùng tự lưu cho thuật toán này
+       luuBai(algo, ten, values), xoaBai(id)
    Khách chưa đăng nhập vẫn dùng web bình thường, chỉ không lưu lịch sử.
    ========================================================= */
 import { db, daCauHinh, theoDoiDangNhap, veThanhNguoiDung } from "./firebase.js";
-import { collection, query, where, orderBy, limit, getDocs, addDoc, serverTimestamp }
+import { collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, doc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 let nguoiDung = null;
@@ -56,6 +58,31 @@ const App = {
       createdAt: serverTimestamp()
     });
     return true;
+  },
+
+  /* ----- BÀI CỦA TÔI: users/{uid}/baiLuu/{id} = { algoId, algoName, ten, values, ngayTao } ----- */
+  async layBaiLuu(algoId) {
+    if (!nguoiDung) return [];
+    // Chỉ lọc theo algoId rồi tự sắp xếp, để Firestore không đòi tạo chỉ mục (index) kép
+    const snap = await getDocs(query(collection(db, "users", nguoiDung.uid, "baiLuu"), where("algoId", "==", algoId)));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.ngayTao?.toMillis?.() || 0) - (a.ngayTao?.toMillis?.() || 0));
+  },
+
+  async luuBai(algo, ten, values) {
+    if (!nguoiDung) throw new Error("Bạn cần đăng nhập để lưu bài.");
+    await addDoc(collection(db, "users", nguoiDung.uid, "baiLuu"), {
+      algoId: algo.id,
+      algoName: algo.name,
+      ten,
+      values,
+      ngayTao: serverTimestamp()
+    });
+  },
+
+  async xoaBai(id) {
+    if (!nguoiDung) return;
+    await deleteDoc(doc(db, "users", nguoiDung.uid, "baiLuu", id));
   }
 };
 

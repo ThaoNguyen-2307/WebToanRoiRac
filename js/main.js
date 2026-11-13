@@ -418,6 +418,21 @@ function renderAlgoPage(algo) {
           <div class="alert loi" id="loiNhap" hidden></div>
           <h4>Ví dụ có sẵn</h4>
           <div class="examples" id="examples"><small class="hint">Đang tải ví dụ...</small></div>
+
+          <!-- BÀI CỦA TÔI: dữ liệu người dùng tự lưu (cần đăng nhập) -->
+          <div class="bai-head">
+            <h4>Bài của tôi</h4>
+            <button class="link-nho" id="btnLuuBai" type="button" hidden>💾 Lưu bài này</button>
+          </div>
+          <form class="luu-bai" id="formLuuBai" hidden>
+            <input name="ten" maxlength="60" placeholder="Đặt tên cho bài, VD: Bài 3 trong slide" aria-label="Tên bài">
+            <div class="luu-bai-nut">
+              <button class="btn sm" type="button" id="huyLuuBai">Hủy</button>
+              <button class="btn sm primary">Lưu</button>
+            </div>
+          </form>
+          <div class="alert" id="tbLuuBai" hidden></div>
+          <div class="examples" id="baiCuaToi"><small class="hint">Đang tải...</small></div>
           <button class="btn primary full" id="btnRun">▶ Bắt đầu mô phỏng</button>
         </aside>
 
@@ -465,6 +480,8 @@ function renderAlgoPage(algo) {
   resetSimulation();
   napLaiTuLichSu(algo);
   taiViDu(algo);
+  ganLuuBai();
+  taiBaiCuaToi(algo);
 }
 
 /* ---------- Ví dụ có sẵn (admin nhập trong trang Quản trị -> Ví dụ bài toán) ---------- */
@@ -511,9 +528,145 @@ function napLaiTuLichSu(algo) {
     if (luu?.algoId === algo.id) {
       sessionStorage.removeItem("napLai");
       dienDuLieu(luu.values);
-      addLog("Đã nạp lại dữ liệu từ lịch sử.");
+      addLog(luu.ten ? `Đã mở bài "${escapeHtml(luu.ten)}". Bấm "Bắt đầu mô phỏng" để chạy.`
+                     : "Đã nạp lại dữ liệu từ lịch sử.");
     }
   } catch (e) {}
+}
+
+/* ---------- BÀI CỦA TÔI ----------
+   Người đã đăng nhập lưu lại dữ liệu mình tự nhập (VD 1 ma trận, 1 bài trong slide) kèm tên,
+   lần sau bấm vào tên là điền lại đúng dữ liệu đó. Lưu ở users/{uid}/baiLuu trên Firestore.  */
+let baiCuaToi = [];                 // danh sách bài đã lưu của thuật toán đang mở
+
+async function taiBaiCuaToi(algo) {
+  const khung = document.getElementById("baiCuaToi");
+  const nutLuu = document.getElementById("btnLuuBai");
+  if (!khung || currentAlgo !== algo) return;
+
+  let App;
+  try { App = await Promise.race([sanSang, new Promise((_, loi) => setTimeout(loi, 5000))]); }
+  catch (e) { khung.innerHTML = `<small class="hint">Không kết nối được máy chủ nên chưa dùng được chức năng này.</small>`; return; }
+
+  const trangThai = App.trangThai();
+  if (trangThai === "dang-tai") return;                 // chờ biết đăng nhập hay chưa (theoDoi sẽ gọi lại)
+  if (trangThai === "khach") {
+    nutLuu.hidden = true;
+    document.getElementById("formLuuBai").hidden = true;
+    khung.innerHTML = `<small class="hint"><a class="link" href="dang-nhap.html">Đăng nhập</a> để lưu dữ liệu bạn tự nhập
+      (VD một ma trận, một bài trong slide) và mở lại bất cứ lúc nào.</small>`;
+    return;
+  }
+
+  nutLuu.hidden = false;
+  try { baiCuaToi = await App.layBaiLuu(algo.id); }
+  catch (e) { console.error(e); khung.innerHTML = `<small class="hint">Không tải được bài đã lưu.</small>`; return; }
+  if (currentAlgo !== algo) return;
+
+  if (!baiCuaToi.length) {
+    khung.innerHTML = `<small class="hint">Chưa có bài nào. Nhập dữ liệu rồi bấm "💾 Lưu bài này".</small>`;
+    return;
+  }
+  khung.innerHTML = baiCuaToi.map((b, i) => `
+    <span class="chip chip-bai">
+      <button type="button" data-bai="${i}" title="${escapeHtml(tomTatDuLieu(giaTriDangDung(algo, b.values)))}">${escapeHtml(b.ten)}</button>
+      <button type="button" class="chip-xoa" data-xoa-bai="${i}" title="Xóa bài này" aria-label="Xóa bài ${escapeHtml(b.ten)}">×</button>
+    </span>`).join("");
+
+  khung.querySelectorAll("[data-bai]").forEach(nut => nut.onclick = () => {
+    const b = baiCuaToi[nut.dataset.bai];
+    dienDuLieu(b.values);
+    addLog(`Đã mở bài "${escapeHtml(b.ten)}". Bấm "Bắt đầu mô phỏng" để chạy.`);
+  });
+  khung.querySelectorAll("[data-xoa-bai]").forEach(nut => nut.onclick = async () => {
+    const b = baiCuaToi[nut.dataset.xoaBai];
+    if (!confirm(`Xóa bài "${b.ten}"?`)) return;
+    try { await App.xoaBai(b.id); taiBaiCuaToi(algo); }
+    catch (e) { tbLuuBai("Không xóa được, hãy thử lại.", "loi"); }
+  });
+}
+
+// Gắn sự kiện cho nút "Lưu bài này" và ô đặt tên
+function ganLuuBai() {
+  const form = document.getElementById("formLuuBai");
+  const oTen = form.elements.ten;
+
+  document.getElementById("btnLuuBai").onclick = () => {
+    tbLuuBai("");
+    // Dữ liệu phải hợp lệ thì mới cho lưu (giống khi bấm "Bắt đầu mô phỏng")
+    const loi = kiemTraDuLieu(currentAlgo);
+    baoLoiNhap(loi);
+    if (loi) return;
+    try { SOLVERS[currentAlgo.id]?.(readInputs()); }
+    catch (err) { baoLoiNhap({ key: err.key, loi: err.message }); return; }
+
+    // Đã lưu dữ liệu y hệt rồi thì báo, không lưu trùng
+    const giaTri = giaTriForm();
+    const khoa = JSON.stringify(giaTriDangDung(currentAlgo, giaTri));
+    const trung = baiCuaToi.find(b => JSON.stringify(giaTriDangDung(currentAlgo, b.values)) === khoa);
+    if (trung) return tbLuuBai(`Dữ liệu này đã được lưu với tên "${trung.ten}".`, "loi");
+
+    form.hidden = false;
+    oTen.value = goiYTenBai(giaTri).slice(0, 60);
+    oTen.focus();
+    oTen.select();
+  };
+
+  document.getElementById("huyLuuBai").onclick = () => { form.hidden = true; };
+  oTen.onkeydown = ev => { if (ev.key === "Escape") form.hidden = true; };
+
+  form.onsubmit = async ev => {
+    ev.preventDefault();
+    const ten = oTen.value.trim();
+    if (!ten) { oTen.focus(); return tbLuuBai("Hãy đặt tên cho bài.", "loi"); }
+    if (baiCuaToi.some(b => b.ten.toLowerCase() === ten.toLowerCase()))
+      return tbLuuBai(`Đã có bài tên "${ten}", hãy chọn tên khác.`, "loi");
+
+    const algo = currentAlgo;
+    const nut = form.querySelector(".primary");
+    nut.disabled = true;
+    try {
+      const App = await sanSang;
+      await App.luuBai(algo, ten, giaTriForm());
+      form.hidden = true;
+      tbLuuBai(`Đã lưu "${ten}". Lần sau bấm vào tên bài để điền lại dữ liệu.`, "ok");
+      taiBaiCuaToi(algo);
+    } catch (e) {
+      console.error(e);
+      tbLuuBai(e.code === "permission-denied"
+        ? "Máy chủ chưa cho phép lưu. Hãy cập nhật luật bảo mật Firestore (file firestore.rules)."
+        : "Không lưu được, hãy thử lại.", "loi");
+    } finally { nut.disabled = false; }
+  };
+}
+
+function tbLuuBai(chu, kieu = "ok") {
+  const k = document.getElementById("tbLuuBai");
+  k.textContent = chu;
+  k.className = "alert " + kieu;
+  k.hidden = !chu;
+}
+
+// Giá trị đang có trong form, dạng chuỗi như người dùng nhập: { type: "...", n: "4", ... }
+function giaTriForm() {
+  return Object.fromEntries(currentAlgo.inputs.map(inp =>
+    [inp.key, document.querySelector(`#inputForm [name="${inp.key}"]`).value]));
+}
+
+// Bỏ các ô không dùng tới (ô bị ẩn, VD ô m khi không chọn Tổ hợp) để so sánh / hiển thị
+function giaTriDangDung(algo, values = {}) {
+  const kq = {};
+  for (const inp of algo.inputs) {
+    if (inp.hienKhi && values[inp.hienKhi.key] !== inp.hienKhi.giaTri) continue;
+    if (values[inp.key] != null) kq[inp.key] = values[inp.key];
+  }
+  return kq;
+}
+
+// Tên gợi ý khi lưu, VD "Hoán vị của n phần tử · n = 4"
+function goiYTenBai(values) {
+  const { cheDo, ...conLai } = giaTriDangDung(currentAlgo, values);   // bỏ ô "Hiển thị" cho tên gọn
+  return tomTatDuLieu(conLai) || currentAlgo.name;
 }
 
 // Tạo 1 ô nhập liệu theo kiểu
@@ -578,6 +731,7 @@ function bindAlgoEvents() {
   // Sửa dữ liệu: ẩn thông báo lỗi và xóa mô phỏng cũ (vì không còn đúng với dữ liệu mới)
   document.getElementById("inputForm").oninput = () => {
     baoLoiNhap(null);
+    tbLuuBai("");
     capNhatOHien();
     veMaGia();
     if (sim.steps.length) resetSimulation();
@@ -668,8 +822,7 @@ function startSimulation() {
 
   // Đã đăng nhập thì lưu lần mô phỏng này vào lịch sử (khách thì bỏ qua)
   const algo = currentAlgo;
-  const raw = Object.fromEntries(algo.inputs.map(inp =>
-    [inp.key, document.querySelector(`#inputForm [name="${inp.key}"]`).value]));
+  const raw = giaTriForm();
   sanSang.then(App => App.luuLichSu(algo, raw))
     .then(daLuu => { if (daLuu) veLichSu(); })            // có mục mới -> cập nhật cột lịch sử
     .catch(e => console.warn("Không lưu được lịch sử:", e));
@@ -765,3 +918,5 @@ window.addEventListener("hashchange", router);
 renderTopNav();
 renderSidebar();
 router();
+// Đăng nhập / đăng xuất khi đang mở trang thuật toán -> vẽ lại phần "Bài của tôi"
+sanSang.then(App => App.theoDoi(() => { if (currentAlgo && document.getElementById("baiCuaToi")) taiBaiCuaToi(currentAlgo); }));

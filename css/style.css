@@ -302,6 +302,26 @@ body.home .content { padding: 0; }
 }
 .chip:hover { border-color: var(--primary); color: var(--primary); }
 
+/* Bài của tôi (trang thuật toán) */
+.bai-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 16px; }
+.bai-head h4 { margin: 0 0 8px; }
+.link-nho { border: none; background: none; padding: 0; font: inherit; font-size: 13px; color: var(--primary); cursor: pointer; }
+.link-nho:hover { text-decoration: underline; }
+.link-nho[hidden] { display: none; }
+.luu-bai { margin-bottom: 10px; }
+.luu-bai[hidden] { display: none; }
+.luu-bai input {
+  width: 100%; padding: 7px 10px; font: inherit; font-size: 14px;
+  border: 1px solid var(--primary); border-radius: 8px; outline: 2px solid var(--primary-soft);
+}
+.luu-bai-nut { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
+.chip-bai { display: inline-flex; align-items: center; padding: 0; overflow: hidden; background: var(--primary-soft); border-color: transparent; }
+.chip-bai button { border: none; background: none; font: inherit; font-size: 13px; cursor: pointer; color: var(--text); }
+.chip-bai [data-bai] { padding: 4px 4px 4px 10px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-bai [data-bai]:hover { color: var(--primary); text-decoration: underline; }
+.chip-xoa { padding: 4px 9px 4px 5px; color: var(--muted) !important; font-size: 15px !important; line-height: 1; }
+.chip-xoa:hover { color: #c92a2a !important; }
+
 /* Nút bấm */
 .btn {
   padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer;
@@ -703,3 +723,7 @@ body.home .content { padding: 0; }
 .modal-chan { display: flex; gap: 8px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid var(--border); }
 .modal .alert { text-align: left; }
 .ma-gia-ten { font-size: 12px; font-weight: 500; color: var(--muted); }
+
+/* Bài của tôi (trang Tài khoản): đổi tên ngay trong bảng */
+.doi-ten-bai { display: flex; gap: 6px; align-items: center; }
+.doi-ten-bai input { flex: 1; min-width: 120px; padding: 4px 8px; font: inherit; font-size: 14px; border: 1px solid var(--primary); border-radius: 6px; }

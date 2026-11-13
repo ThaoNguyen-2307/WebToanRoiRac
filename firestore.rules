@@ -5,6 +5,7 @@
 // Các bảng (collection):
 //   users/{uid}                 hồ sơ tài khoản (vaiTro: "user" | "admin", biKhoa)
 //   users/{uid}/history/{id}    lịch sử mô phỏng của từng người
+//   users/{uid}/baiLuu/{id}     "Bài của tôi": dữ liệu người dùng tự lưu, có đặt tên
 //   examples/{id}               ví dụ có sẵn của từng thuật toán (admin quản lý)
 // =========================================================
 rules_version = '2';
@@ -36,6 +37,15 @@ service cloud.firestore {
       // Lịch sử mô phỏng: chỉ chính chủ được xem, thêm, xóa
       match /history/{id} {
         allow read, create, delete: if daDangNhap() && request.auth.uid == uid;
+      }
+
+      // Bài của tôi: chỉ chính chủ được xem, lưu, đổi tên, xóa. Tên bài từ 1 đến 60 ký tự
+      match /baiLuu/{id} {
+        allow read, delete: if daDangNhap() && request.auth.uid == uid;
+        allow create, update: if daDangNhap() && request.auth.uid == uid
+                              && request.resource.data.ten is string
+                              && request.resource.data.ten.size() > 0
+                              && request.resource.data.ten.size() <= 60;
       }
     }
 

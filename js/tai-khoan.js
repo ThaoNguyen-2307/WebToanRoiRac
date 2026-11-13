@@ -2,6 +2,7 @@
    tai-khoan.js — TRANG "TÀI KHOẢN CỦA TÔI" (người đã đăng nhập)
    - Xem hồ sơ, đổi tên hiển thị
    - Đổi mật khẩu (chỉ với tài khoản đăng ký bằng email)
+   - Bài của tôi (bài đã lưu có đặt tên): mở, đổi tên, xóa
    - Lịch sử các bài đã mô phỏng: mô phỏng lại, xóa
    ========================================================= */
 import { auth, db, yeuCauDangNhap, veThanhNguoiDung, e, anhDaiDien, ngayGio,
@@ -18,6 +19,7 @@ const trang = document.getElementById("trang");
 yeuCauDangNhap((user, hoSo) => {
   veThanhNguoiDung(user, hoSo);
   veTrang(user, hoSo || {});
+  taiBaiLuu(user);
   taiLichSu(user);
 });
 
@@ -77,6 +79,13 @@ function veTrang(user, hoSo) {
       </div>
     </div>
 
+    <!-- BÀI CỦA TÔI -->
+    <section class="panel">
+      <div class="history-head"><h3>Bài của tôi</h3></div>
+      <div class="alert" id="tbBaiLuu" hidden></div>
+      <div id="baiLuu"><p class="muted">Đang tải...</p></div>
+    </section>
+
     <!-- LỊCH SỬ -->
     <section class="panel">
       <!-- Tiêu đề và ô "Chọn hết" nằm cùng 1 hàng -->
@@ -130,6 +139,88 @@ function veTrang(user, hoSo) {
       thongBao("tbMatKhau", "Đã đổi mật khẩu.", "ok");
     } catch (err) { thongBao("tbMatKhau", loiTiengViet(err)); }
   };
+}
+
+/* ---------- Bài của tôi (users/{uid}/baiLuu) ---------- */
+async function taiBaiLuu(user) {
+  const khung = document.getElementById("baiLuu");
+  try {
+    const snap = await getDocs(query(collection(db, "users", user.uid, "baiLuu"), orderBy("ngayTao", "desc")));
+    if (snap.empty) {
+      khung.innerHTML = `<p class="muted">Bạn chưa lưu bài nào. Ở trang mô phỏng, nhập dữ liệu rồi bấm
+        <b>💾 Lưu bài này</b> (dưới phần "Ví dụ có sẵn") để lưu lại và mở lại sau.</p>`;
+      return;
+    }
+    const theoId = Object.fromEntries(snap.docs.map(d => [d.id, d.data()]));
+    khung.innerHTML = `
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Tên bài</th><th>Bài toán</th><th>Dữ liệu</th><th>Ngày lưu</th><th></th></tr></thead>
+        <tbody>
+          ${snap.docs.map(d => {
+            const b = d.data();
+            return `<tr>
+              <td class="ten-bai" data-o-ten="${d.id}"><b>${e(b.ten)}</b></td>
+              <td>${e(b.algoName)}</td>
+              <td class="data-cell">${tomTatDuLieu(b.algoId, b.values)}</td>
+              <td class="nowrap">${ngayGio(b.ngayTao)}</td>
+              <td><div class="actions">
+                <button class="btn sm primary" data-mo="${d.id}">Mở</button>
+                <button class="btn sm" data-doi-ten="${d.id}">Đổi tên</button>
+                <button class="btn sm danger" data-xoa-bai="${d.id}">Xóa</button>
+              </div></td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table></div>`;
+
+    // Mở: gửi dữ liệu sang trang thuật toán (main.js tự điền vào form)
+    khung.querySelectorAll("[data-mo]").forEach(b => b.onclick = () => {
+      const bai = theoId[b.dataset.mo];
+      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: bai.algoId, values: bai.values, ten: bai.ten })); } catch (e) {}
+      location.href = `index.html#/algo/${bai.algoId}`;
+    });
+
+    // Đổi tên ngay trong bảng
+    khung.querySelectorAll("[data-doi-ten]").forEach(b => b.onclick = () => {
+      const id = b.dataset.doiTen;
+      const o = khung.querySelector(`[data-o-ten="${id}"]`);
+      if (o.querySelector("form")) return;                 // đang sửa rồi
+      o.innerHTML = `<form class="doi-ten-bai">
+          <input name="ten" maxlength="60" value="${e(theoId[id].ten)}" aria-label="Tên mới">
+          <button class="btn sm primary">Lưu</button>
+          <button class="btn sm" type="button" data-huy>Hủy</button>
+        </form>`;
+      const form = o.querySelector("form");
+      form.elements.ten.focus();
+      form.elements.ten.select();
+      const huy = () => { o.innerHTML = `<b>${e(theoId[id].ten)}</b>`; };
+      form.querySelector("[data-huy]").onclick = huy;
+      form.elements.ten.onkeydown = ev => { if (ev.key === "Escape") huy(); };
+      form.onsubmit = async ev => {
+        ev.preventDefault();
+        const ten = form.elements.ten.value.trim();
+        if (!ten) return thongBao("tbBaiLuu", "Tên bài không được để trống.");
+        const trung = Object.entries(theoId).find(([k, v]) =>
+          k !== id && v.algoId === theoId[id].algoId && v.ten.toLowerCase() === ten.toLowerCase());
+        if (trung) return thongBao("tbBaiLuu", `Bài toán này đã có bài tên "${ten}", hãy chọn tên khác.`);
+        try {
+          await updateDoc(doc(db, "users", user.uid, "baiLuu", id), { ten });
+          theoId[id].ten = ten;
+          huy();
+          thongBao("tbBaiLuu", "Đã đổi tên.", "ok");
+        } catch (err) { thongBao("tbBaiLuu", loiTiengViet(err)); }
+      };
+    });
+
+    khung.querySelectorAll("[data-xoa-bai]").forEach(b => b.onclick = async () => {
+      const id = b.dataset.xoaBai;
+      if (!confirm(`Xóa bài "${theoId[id].ten}"?`)) return;
+      try { await deleteDoc(doc(db, "users", user.uid, "baiLuu", id)); taiBaiLuu(user); }
+      catch (err) { thongBao("tbBaiLuu", loiTiengViet(err)); }
+    });
+  } catch (err) {
+    khung.innerHTML = `<p class="alert loi">${e(loiTiengViet(err))}</p>`;
+  }
 }
 
 /* ---------- Lịch sử mô phỏng (users/{uid}/history) ---------- */

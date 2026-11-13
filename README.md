@@ -7,7 +7,7 @@
 | Vai trò | Trang | Làm được gì |
 |---|---|---|
 | **Khách** (chưa đăng nhập) | `index.html` | Xem trang chủ, lý thuyết, mô phỏng mọi thuật toán, dùng ví dụ có sẵn |
-| **Người dùng** (đã đăng nhập) | `tai-khoan.html` | Như khách, cộng thêm: lưu lịch sử mô phỏng, mô phỏng lại, đổi tên, đổi mật khẩu |
+| **Người dùng** (đã đăng nhập) | `tai-khoan.html` | Như khách, cộng thêm: lưu lịch sử mô phỏng, mô phỏng lại, **Bài của tôi** (lưu dữ liệu tự nhập kèm tên để mở lại), đổi tên, đổi mật khẩu |
 | **Đăng nhập / Đăng ký** | `dang-nhap.html` | Email + mật khẩu, **Google** (Gmail), quên mật khẩu |
 | **Admin** | `admin/index.html` | Thống kê: số tài khoản, lượt mô phỏng, thuật toán dùng nhiều nhất |
 | | `admin/tai-khoan.html` | Đổi vai trò (người dùng ↔ admin), khóa / mở khóa tài khoản |
@@ -46,6 +46,7 @@ web-toan-roi-rac/
 |---|---|
 | `users/{uid}` | `email, ten, anh, dangNhapBang, vaiTro ("user" / "admin"), biKhoa, ngayTao, lanCuoi` |
 | `users/{uid}/history/{id}` | `algoId, algoName, values, createdAt` (lịch sử mô phỏng của từng người) |
+| `users/{uid}/baiLuu/{id}` | `algoId, algoName, ten, values, ngayTao` (Bài của tôi: dữ liệu người dùng tự lưu, có đặt tên) |
 | `examples/{id}` | `algoId, tieuDe, values, ngayTao` (ví dụ có sẵn, admin quản lý) |
 
 ## Cấu hình Firebase (làm 1 lần)
