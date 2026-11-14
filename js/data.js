@@ -91,11 +91,11 @@ const ALGORITHMS = [
     pseudo: [
       "Try(i):",
       "  for j = 1..n:",
-      "    if cột j và 2 đường chéo còn trống:",
+      "    if cột j, 2 đường chéo trống:",
       "      đặt hậu tại (i, j)",
       "      if i == n: in lời giải",
       "      else: Try(i + 1)",
-      "      gỡ hậu tại (i, j)  // quay lui"
+      "      gỡ hậu tại (i, j) //quay lui"
     ],
     complexity: "O(n!)"
   },
@@ -124,40 +124,105 @@ const ALGORITHMS = [
     id: "fibonacci",
     name: "Fibonacci: đệ quy và quy hoạch động",
     group: "qhd",
-    short: "So sánh số lần gọi hàm giữa đệ quy thường và quy hoạch động.",
+    short: "Tính số Fibonacci thứ n bằng 3 cách và so sánh số lần gọi hàm: đệ quy thường, QHĐ top-down, QHĐ bottom-up.",
     inputs: [
-      { key: "n", label: "n", type: "number", value: 6, min: 1, max: 10 },
+      { key: "n", label: "n", type: "number", value: 6,
+        hint: "Quy ước như slide: f(1) = f(2) = 1, f(6) = 8. Đệ quy thường nên chọn n ≤ 9 để xem được cây lời gọi." },
       { key: "mode", label: "Cách giải", type: "select",
-        options: ["Đệ quy thường", "Quy hoạch động (lưu kết quả)"] }
+        options: ["Đệ quy thường (vét cạn)", "QHĐ top-down (có bảng nhớ)", "QHĐ bottom-up (vòng lặp)"] }
     ],
+    // Mã giả chung (tab Lý thuyết): bản top-down của slide
     pseudo: [
       "fib(n):",
       "  if n <= 2: return 1",
-      "  if n đã có trong bảng nhớ: return nhớ[n]",
-      "  nhớ[n] = fib(n-1) + fib(n-2)",
-      "  return nhớ[n]"
+      "  if có nho[n]: return nho[n]",
+      "  nho[n] = fib(n-1) + fib(n-2)",
+      "  return nho[n]"
     ],
-    complexity: "Đệ quy O(2ⁿ), QHĐ O(n)"
+    maGiaTheo: {
+      key: "mode",
+      "Đệ quy thường (vét cạn)": [
+        "fib(n):",
+        "  if n <= 2: return 1",
+        "  return fib(n-1) + fib(n-2)"
+      ],
+      "QHĐ top-down (có bảng nhớ)": [
+        "fib(n):",
+        "  if n <= 2: return 1",
+        "  if có nho[n]: return nho[n]",
+        "  nho[n] = fib(n-1) + fib(n-2)",
+        "  return nho[n]"
+      ],
+      "QHĐ bottom-up (vòng lặp)": [
+        "fib(n):",
+        "  F[1] = 1; F[2] = 1",
+        "  for i = 3..n:",
+        "    F[i] = F[i-1] + F[i-2]",
+        "  return F[n]"
+      ]
+    },
+    complexity: "Đệ quy thường O(2ⁿ); QHĐ top-down và bottom-up O(n)"
   },
   {
     id: "balo",
     name: "Xếp ba lô (cái túi)",
     group: "qhd",
-    short: "Chọn đồ vật bỏ vào ba lô sức chứa b để tổng giá trị lớn nhất.",
+    short: "Chọn đồ vật bỏ vào ba lô sức chứa b để tổng giá trị lớn nhất, giải bằng bảng quy hoạch động F[i][w].",
     inputs: [
-      { key: "b", label: "Sức chứa ba lô b", type: "number", value: 8, min: 1, max: 30 },
-      { key: "w", label: "Trọng lượng (cách nhau dấu phẩy)", type: "text", value: "3, 4, 5, 2" },
-      { key: "v", label: "Giá trị (cách nhau dấu phẩy)", type: "text", value: "4, 5, 6, 3" }
+      { key: "loai", label: "Bài toán", type: "select",
+        options: ["Ba lô 1 (mỗi vật lấy tối đa 1 lần)", "Ba lô 2 (mỗi vật lấy tối đa m lần)"] },
+      { key: "b", label: "Sức chứa ba lô b", type: "number", value: 8,
+        hint: "Nên chọn b ≤ 15 để bảng vừa màn hình." },
+      { key: "a", label: "Trọng lượng a₁..aₙ (cách nhau dấu phẩy)", type: "text", value: "3, 4, 5, 2" },
+      { key: "c", label: "Giá trị c₁..cₙ (cách nhau dấu phẩy)", type: "text", value: "4, 5, 6, 3" },
+      { key: "m", label: "Mỗi vật lấy tối đa m lần", type: "number", value: 2,
+        hienKhi: { key: "loai", giaTri: "Ba lô 2 (mỗi vật lấy tối đa m lần)" } },
+      { key: "cheDo", label: "Hiển thị", type: "select",
+        options: ["Chi tiết từng dòng mã giả", "Chỉ kết quả từng ô"] }
     ],
     pseudo: [
       "for i = 1..n:",
       "  for w = 0..b:",
       "    F[i][w] = F[i-1][w]",
       "    if a[i] <= w:",
-      "      F[i][w] = max(F[i][w], F[i-1][w-a[i]] + c[i])",
+      "      lay = F[i-1][w-a[i]] + c[i]",
+      "      F[i][w] = max(F[i][w], lay)",
+      "w = b                 //truy vết",
+      "for i = n..1:",
+      "  if F[i][w] != F[i-1][w]:",
+      "    chọn vật i; w = w - a[i]",
       "return F[n][b]"
     ],
-    complexity: "O(n × b)"
+    maGiaTheo: {
+      key: "loai",
+      "Ba lô 1 (mỗi vật lấy tối đa 1 lần)": [
+        "for i = 1..n:",
+        "  for w = 0..b:",
+        "    F[i][w] = F[i-1][w]",
+        "    if a[i] <= w:",
+        "      lay = F[i-1][w-a[i]] + c[i]",
+        "      F[i][w] = max(F[i][w], lay)",
+        "w = b                 //truy vết",
+        "for i = n..1:",
+        "  if F[i][w] != F[i-1][w]:",
+        "    chọn vật i; w = w - a[i]",
+        "return F[n][b]"
+      ],
+      "Ba lô 2 (mỗi vật lấy tối đa m lần)": [
+        "for i = 1..n:",
+        "  for w = 0..b:",
+        "    F[i][w] = F[i-1][w]",
+        "    for k = 1..m, k*a[i] <= w:",
+        "      lay = F[i-1][w-k*a[i]]+k*c[i]",
+        "      F[i][w] = max(F[i][w], lay)",
+        "w = b                 //truy vết",
+        "for i = n..1:",
+        "  x[i] = số cái vật i đã lấy",
+        "  w = w - x[i]*a[i]",
+        "return F[n][b]"
+      ]
+    },
+    complexity: "Ba lô 1: O(n × b). Ba lô 2: O(n × b × m)"
   },
   {
     id: "tsp",

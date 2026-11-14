@@ -8,7 +8,7 @@
    Mã giả (trong data.js), đánh số dòng từ 0:
      0  Try(i):
      1    for j = 1..n:
-     2      if cột j và 2 đường chéo còn trống:
+     2      if cột j, 2 đường chéo trống:
      3        đặt hậu tại (i, j)
      4        if i == n: in lời giải
      5        else: Try(i + 1)
