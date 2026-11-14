@@ -8,8 +8,10 @@ import { auth, db, yeuCauDangNhap, veThanhNguoiDung, e, anhDaiDien, ngayGio,
          tenCachDangNhap, loiTiengViet, thongBao } from "./firebase.js";
 import { updateProfile, EmailAuthProvider, reauthenticateWithCredential, updatePassword }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, updateDoc, collection, query, orderBy, limit, getDocs, deleteDoc }
+import { doc, updateDoc, collection, query, orderBy, limit, getDocs, deleteDoc, writeBatch }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { themNutMat } from "./mat-khau.js";
+import { moDoiAnh } from "./anh-dai-dien.js";
 
 const trang = document.getElementById("trang");
 
@@ -27,7 +29,12 @@ function veTrang(user, hoSo) {
     <div class="account-grid">
       <!-- HỒ SƠ -->
       <section class="panel profile">
-        ${anhDaiDien(hoSo.anh || user.photoURL, hoSo.ten, "avatar lon")}
+        <!-- Bấm vào ảnh để đổi ảnh đại diện -->
+        <button class="doi-anh" id="nutDoiAnh" type="button" title="Đổi ảnh đại diện">
+          <span id="anhHoSo">${anhDaiDien(hoSo.anh || user.photoURL, hoSo.ten, "avatar lon")}</span>
+          <span class="doi-anh-nhan">📷 Đổi ảnh</span>
+        </button>
+        <div class="alert" id="tbAnh" hidden></div>
         <h2>${e(hoSo.ten)}</h2>
         <p class="muted">${e(user.email || "")}</p>
         <dl class="info-list">
@@ -72,9 +79,26 @@ function veTrang(user, hoSo) {
 
     <!-- LỊCH SỬ -->
     <section class="panel">
-      <h3>Lịch sử mô phỏng</h3>
+      <!-- Tiêu đề và ô "Chọn hết" nằm cùng 1 hàng -->
+      <div class="history-head">
+        <h3>Lịch sử mô phỏng</h3>
+        <span id="oChonHet"></span>
+      </div>
       <div id="lichSu"><p class="muted">Đang tải...</p></div>
     </section>`;
+
+  /* Đổi ảnh đại diện: lưu vào trường "anh" của users/{uid} */
+  document.getElementById("nutDoiAnh").onclick = async () => {
+    const anhMoi = await moDoiAnh(hoSo.anh || user.photoURL || "", hoSo.ten);
+    if (anhMoi === null) return;                         // bấm Hủy
+    try {
+      await updateDoc(doc(db, "users", user.uid), { anh: anhMoi });
+      hoSo.anh = anhMoi;
+      document.getElementById("anhHoSo").innerHTML = anhDaiDien(anhMoi || user.photoURL, hoSo.ten, "avatar lon");
+      veThanhNguoiDung(user, hoSo);                      // cập nhật ảnh nhỏ trên thanh menu
+      thongBao("tbAnh", anhMoi ? "Đã đổi ảnh đại diện." : "Đã xóa ảnh đại diện.", "ok");
+    } catch (err) { thongBao("tbAnh", loiTiengViet(err)); }
+  };
 
   /* Đổi tên */
   document.getElementById("formTen").onsubmit = async ev => {
@@ -85,11 +109,13 @@ function veTrang(user, hoSo) {
       await updateProfile(user, { displayName: ten });
       await updateDoc(doc(db, "users", user.uid), { ten });
       thongBao("tbTen", "Đã lưu họ tên.", "ok");
-      veThanhNguoiDung(user, { ...hoSo, ten });
+      hoSo.ten = ten;
+      veThanhNguoiDung(user, hoSo);
     } catch (err) { thongBao("tbTen", loiTiengViet(err)); }
   };
 
   /* Đổi mật khẩu: phải nhập lại mật khẩu cũ để xác nhận (Firebase yêu cầu) */
+  themNutMat(trang);     // nút con mắt cho các ô mật khẩu
   const formMK = document.getElementById("formMatKhau");
   if (formMK) formMK.onsubmit = async ev => {
     ev.preventDefault();
@@ -113,19 +139,26 @@ async function taiLichSu(user) {
     const q = query(collection(db, "users", user.uid, "history"), orderBy("createdAt", "desc"), limit(50));
     const snap = await getDocs(q);
     if (snap.empty) {
+      document.getElementById("oChonHet").innerHTML = "";
       khung.innerHTML = `<p class="muted">Bạn chưa mô phỏng bài nào. <a class="link" href="index.html">Bắt đầu ngay</a></p>`;
       return;
     }
+    document.getElementById("oChonHet").innerHTML =
+      `<label class="check"><input type="checkbox" id="chonHet"> Chọn hết</label>`;
     khung.innerHTML = `
       <div class="table-wrap"><table class="table">
-        <thead><tr><th>Thời gian</th><th>Bài toán</th><th>Dữ liệu</th><th></th></tr></thead>
+        <thead><tr>
+          <th class="col-check"></th><th>Thời gian</th><th>Bài toán</th><th>Dữ liệu</th>
+          <th class="col-xoa"><button class="btn sm danger" id="xoaDaChon" disabled>Xóa mục đã chọn</button></th>
+        </tr></thead>
         <tbody>
           ${snap.docs.map(d => {
             const h = d.data();
             return `<tr>
+              <td class="col-check"><input type="checkbox" class="chon-muc" value="${d.id}" aria-label="Chọn mục này"></td>
               <td class="nowrap">${ngayGio(h.createdAt)}</td>
               <td>${e(h.algoName)}</td>
-              <td class="data-cell">${tomTatDuLieu(h.values)}</td>
+              <td class="data-cell">${tomTatDuLieu(h.algoId, h.values)}</td>
               <td><div class="actions">
                 <button class="btn sm" data-chay="${d.id}">Mô phỏng lại</button>
                 <button class="btn sm danger" data-xoa="${d.id}">Xóa</button>
@@ -144,19 +177,61 @@ async function taiLichSu(user) {
       location.href = `index.html#/algo/${h.algoId}`;
     });
 
+    // Xóa 1 mục
     khung.querySelectorAll("[data-xoa]").forEach(b => b.onclick = async () => {
       if (!confirm("Xóa mục này khỏi lịch sử?")) return;
       await deleteDoc(doc(db, "users", user.uid, "history", b.dataset.xoa));
       taiLichSu(user);
     });
+
+    /* ----- Chọn nhiều mục để xóa ----- */
+    const chonHet = document.getElementById("chonHet");
+    const nutXoa = document.getElementById("xoaDaChon");
+    const oChon = [...khung.querySelectorAll(".chon-muc")];
+    const daChon = () => oChon.filter(o => o.checked);
+
+    function capNhatNut() {
+      const k = daChon().length;
+      // Chỉ hiện "Chọn hết" và nút xóa khi đã tích ít nhất 1 mục
+      document.getElementById("oChonHet").classList.toggle("an", k === 0);
+      nutXoa.classList.toggle("an", k === 0);
+      nutXoa.disabled = k === 0;
+      nutXoa.textContent = k ? `Xóa ${k} mục đã chọn` : "Xóa mục đã chọn";
+      chonHet.checked = k === oChon.length;                 // chọn đủ hết thì ô "Chọn hết" cũng được tích
+      chonHet.indeterminate = k > 0 && k < oChon.length;    // chọn một phần thì hiện dấu gạch
+      oChon.forEach(o => o.closest("tr").classList.toggle("dang-chon", o.checked));
+    }
+
+    chonHet.onchange = () => { oChon.forEach(o => o.checked = chonHet.checked); capNhatNut(); };
+    capNhatNut();                                        // ban đầu chưa chọn gì -> ẩn 2 nút
+    oChon.forEach(o => o.onchange = capNhatNut);
+
+    nutXoa.onclick = async () => {
+      const ids = daChon().map(o => o.value);
+      if (!ids.length || !confirm(`Xóa ${ids.length} mục đã chọn khỏi lịch sử?`)) return;
+      nutXoa.disabled = true;
+      nutXoa.textContent = "Đang xóa...";
+      // Xóa cùng lúc bằng writeBatch (mỗi lần tối đa 500 mục)
+      for (let i = 0; i < ids.length; i += 500) {
+        const batch = writeBatch(db);
+        ids.slice(i, i + 500).forEach(id => batch.delete(doc(db, "users", user.uid, "history", id)));
+        await batch.commit();
+      }
+      taiLichSu(user);
+    };
   } catch (err) {
     khung.innerHTML = `<p class="alert loi">${e(loiTiengViet(err))}</p>`;
   }
 }
 
-// { n: "4", matrix: "0 1\n1 0" } -> "n = 4 · matrix = 0 1 / 1 0"
-function tomTatDuLieu(values = {}) {
-  return Object.entries(values)
-    .map(([k, v]) => `<span class="kv">${e(k)} = ${e(String(v).replace(/\n/g, " / "))}</span>`)
+// Hiện dữ liệu theo đúng thứ tự và tên ô nhập của thuật toán (lấy từ data.js)
+// VD: { type: "Hoán vị...", n: "4", m: "2" } -> "Bài toán = Hoán vị...  n = 4"   (bỏ ô m vì không dùng)
+function tomTatDuLieu(algoId, values = {}) {
+  const algo = ALGORITHMS.find(a => a.id === algoId);
+  const dsO = algo ? algo.inputs : Object.keys(values).map(key => ({ key, label: key }));
+  return dsO
+    .filter(inp => values[inp.key] != null && values[inp.key] !== "")
+    .filter(inp => !inp.hienKhi || values[inp.hienKhi.key] === inp.hienKhi.giaTri)   // ô bị ẩn thì không hiện
+    .map(inp => `<span class="kv">${e(inp.label)} = ${e(String(values[inp.key]).replace(/\n/g, " / "))}</span>`)
     .join(" ");
 }
