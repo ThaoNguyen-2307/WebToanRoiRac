@@ -31,13 +31,27 @@ web-toan-roi-rac/
 ├── js/
 │   ├── data.js           Dữ liệu các thuật toán (tên, ô nhập, mã giả)
 │   ├── main.js           Trang khách: menu, trang thuật toán, bộ điều khiển mô phỏng
+│   ├── minh-hoa.js       Biểu tượng, hình minh họa SVG cho menu và thẻ thuật toán
+│   ├── thuat-toan/       Mỗi thuật toán 1 file: hàm giải SOLVERS, hàm vẽ VE, lý thuyết
+│   │   ├── lietke.js     Liệt kê nhị phân, hoán vị, tổ hợp (quay lui)
+│   │   ├── nhau.js       Xếp n quân hậu (quay lui)
+│   │   ├── hanoi.js      Tháp Hà Nội (đệ quy)
+│   │   ├── fibonacci.js  Fibonacci: đệ quy, QHĐ top-down, bottom-up
+│   │   ├── balo.js       Xếp ba lô 1, 2 (QHĐ)
+│   │   ├── do-thi.js     Dùng chung cho bài đồ thị: kiểm tra ma trận, vẽ đồ thị
+│   │   ├── tsp.js        Người du lịch: nhánh cận, vét cạn, láng giềng gần nhất
+│   │   ├── bfsdfs.js     Duyệt đồ thị BFS, DFS
+│   │   └── dijkstra.js   Đường đi ngắn nhất Dijkstra
+│   ├── mat-khau.js       Nút ẩn/hiện mật khẩu
+│   ├── anh-dai-dien.js   Hộp thoại đổi ảnh đại diện (chọn ảnh / chụp camera)
 │   ├── firebase-config.js  THÔNG TIN KẾT NỐI FIREBASE (tự điền)
 │   ├── firebase.js       Dùng chung: kết nối, hồ sơ, phân quyền, thanh người dùng
 │   ├── trang-khach.js    Nối trang khách với Firebase (lưu lịch sử, tải ví dụ)
 │   ├── dang-nhap.js      Xử lý đăng nhập / đăng ký
 │   ├── tai-khoan.js      Xử lý trang tài khoản
 │   └── admin.js          Xử lý 3 trang admin
-└── firestore.rules       Luật bảo mật cơ sở dữ liệu
+├── firestore.rules       Luật bảo mật cơ sở dữ liệu
+└── .gitignore            Bỏ qua file rác của macOS (.DS_Store)
 ```
 
 ## Cơ sở dữ liệu (Cloud Firestore)

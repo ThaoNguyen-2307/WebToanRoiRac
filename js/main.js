@@ -442,15 +442,17 @@ function renderAlgoPage(algo) {
             <p class="viz-empty">Khu vực mô phỏng<br><small>Nhập dữ liệu rồi bấm "Bắt đầu mô phỏng"</small></p>
           </div>
           <div class="controls">
-            <button class="btn" id="btnReset" title="Đặt lại">⟲</button>
-            <button class="btn" id="btnPrev"  title="Lùi 1 bước">◀ Lùi</button>
-            <button class="btn primary" id="btnPlay" title="Tự chạy">▶ Tự chạy</button>
-            <button class="btn" id="btnNext"  title="Tiếp 1 bước">Tiếp ▶</button>
+            <button class="btn" id="btnReset" title="Đặt lại (phím R)">⟲</button>
+            <button class="btn" id="btnPrev"  title="Lùi 1 bước (phím ←)">◀ Lùi</button>
+            <button class="btn primary" id="btnPlay" title="Tự chạy / Dừng (phím Space)">▶ Tự chạy</button>
+            <button class="btn" id="btnNext"  title="Tiếp 1 bước (phím →)">Tiếp ▶</button>
             <label class="speed">Tốc độ
               <input type="range" id="speed" min="1" max="5" value="3">
             </label>
             <span class="step-count" id="stepCount">Bước 0 / 0</span>
           </div>
+          <p class="phim-tat">Phím tắt: <kbd>←</kbd> <kbd>→</kbd> lùi / tiếp · <kbd>Space</kbd> tự chạy / dừng ·
+            <kbd>Home</kbd> <kbd>End</kbd> bước đầu / cuối · <kbd>R</kbd> đặt lại</p>
         </section>
 
         <!-- Cột phải: mã giả + nhật ký -->
@@ -912,7 +914,36 @@ function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/* ---------- PHÍM TẮT KHI MÔ PHỎNG ----------
+   →  tiếp 1 bước (chưa chạy thì bắt đầu mô phỏng)   ←  lùi 1 bước
+   Space  tự chạy / dừng      Home / End  về bước đầu / bước cuối      R  đặt lại
+   Không bắt phím khi đang gõ trong ô nhập, khi có hộp thoại mở, hoặc khi đang ở tab Lý thuyết. */
+function xuLyPhimTat(ev) {
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;              // để yên Cmd+R, Ctrl+C...
+  const tabMoPhong = document.getElementById("tab-sim");
+  if (!tabMoPhong || tabMoPhong.classList.contains("hidden")) return;
+  if (document.querySelector(".modal-nen")) return;
+  const dangGo = ev.target.closest?.("input, textarea, select, [contenteditable]");
+  if (dangGo) return;
+
+  const phim = ev.key === " " ? "Space" : ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
+  const lenh = {
+    ArrowRight: () => { stopAutoPlay(); sim.steps.length ? goToStep(sim.index + 1) : startSimulation(); },
+    ArrowLeft:  () => { stopAutoPlay(); goToStep(sim.index - 1); },
+    Space:      () => toggleAutoPlay(),
+    Home:       () => { stopAutoPlay(); if (sim.steps.length) goToStep(0); },
+    End:        () => { stopAutoPlay(); if (sim.steps.length) goToStep(sim.steps.length - 1); },
+    r:          () => resetSimulation()
+  }[phim];
+  if (!lenh) return;
+  ev.preventDefault();                       // Space không cuộn trang, mũi tên không cuộn ngang
+  // Vừa bấm chuột vào 1 nút thì nút đó đang được chọn, Space sẽ "bấm" nút đó lần nữa -> bỏ chọn trước
+  if (document.activeElement?.tagName === "BUTTON") document.activeElement.blur();
+  lenh();
+}
+
 /* ---------- KHỞI ĐỘNG ---------- */
+document.addEventListener("keydown", xuLyPhimTat);
 document.getElementById("menuBtn").onclick = () => document.body.classList.toggle("menu-open");
 window.addEventListener("hashchange", router);
 renderTopNav();

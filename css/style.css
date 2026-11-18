@@ -3109,3 +3109,51 @@ body.home .content {
 .field .hint {
   display: block;
 }
+
+/* Điện thoại: không để ô chọn có chữ dài (VD "Ba lô 2 (mỗi vật lấy tối đa m lần)") đẩy trang rộng ra */
+.sim-grid > * {
+  min-width: 0;
+}
+
+.field select,
+.field input,
+.field textarea {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Khung mô phỏng: bảng rộng (VD bảng ba lô) thì cuộn ngang bên trong khung, không làm cả trang rộng ra */
+.viz {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.viz-content {
+  min-width: 0;
+}
+
+/* Dòng gợi ý phím tắt dưới các nút điều khiển (ẩn trên điện thoại vì không có bàn phím) */
+.phim-tat {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.phim-tat kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 5px;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-align: center;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+}
+
+@media (hover: none) {
+  .phim-tat {
+    display: none;
+  }
+}
