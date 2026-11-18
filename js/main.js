@@ -493,6 +493,7 @@ function renderAlgoPage(algo) {
           <div class="alert" id="tbLuuBai" hidden></div>
           <div class="examples" id="baiCuaToi"><small class="hint">Đang tải...</small></div>
           <button class="btn primary full" id="btnRun">▶ Bắt đầu mô phỏng</button>
+          <button class="btn full nut-so-sanh" id="btnSoSanh" hidden>📊 So sánh các cách giải</button>
         </aside>
 
         <!-- Cột giữa: khu vực vẽ + nút điều khiển -->
@@ -500,6 +501,8 @@ function renderAlgoPage(algo) {
           <div class="viz" id="viz">
             <p class="viz-empty">Khu vực mô phỏng<br><small>Nhập dữ liệu rồi bấm "Bắt đầu mô phỏng"</small></p>
           </div>
+          <!-- Câu hỏi của chế độ Tự kiểm tra (js/tu-kiem-tra.js) -->
+          <div class="hop-hoi" id="hopHoi" hidden></div>
           <div class="controls">
             <button class="btn" id="btnReset" title="Đặt lại (phím R)">⟲</button>
             <button class="btn" id="btnPrev"  title="Lùi 1 bước (phím ←)">◀ Lùi</button>
@@ -508,6 +511,9 @@ function renderAlgoPage(algo) {
             <label class="speed">Tốc độ
               <input type="range" id="speed" min="1" max="5" value="3">
             </label>
+            <label class="tu-kiem-tra" title="Web sẽ dừng lại hỏi bạn bước tiếp theo trước khi hiện">
+              <input type="checkbox" id="chkKiemTra"> 🧠 Tự kiểm tra</label>
+            <span class="pill diem-kt" id="diemKT" hidden></span>
             <span class="step-count" id="stepCount">Bước 0 / 0</span>
           </div>
           <p class="phim-tat">Phím tắt: <kbd>←</kbd> <kbd>→</kbd> lùi / tiếp · <kbd>Space</kbd> tự chạy / dừng ·
@@ -578,6 +584,8 @@ function dienDuLieu(values = {}) {
     const el = document.querySelector(`#inputForm [name="${key}"]`);
     if (el && val != null) el.value = val;
   }
+  dongBoOMaTran();        // ô ma trận dạng bảng vẽ lại theo dữ liệu mới
+  baoLoiNhap(null);       // dữ liệu mới thì bỏ thông báo lỗi cũ
   capNhatOHien();
   veMaGia();
 }
@@ -732,6 +740,7 @@ function goiYTenBai(values) {
 
 // Tạo 1 ô nhập liệu theo kiểu
 function renderInput(inp) {
+  if (inp.type === "matrix") return oMaTranHTML(inp);      // ô ma trận dạng bảng: js/o-ma-tran.js
   let field;
   if (inp.type === "select") {
     field = `<select name="${inp.key}">${inp.options.map(o => `<option>${o}</option>`).join("")}</select>`;
@@ -797,6 +806,9 @@ function bindAlgoEvents() {
     veMaGia();
     if (sim.steps.length) resetSimulation();
   };
+  ganOMaTran(currentAlgo);
+  ganSoSanh();
+  ktGan();
   capNhatOHien();
   veMaGia();
   document.getElementById("btnNext").onclick = () => goToStep(sim.index + 1);
@@ -812,7 +824,8 @@ function readInputs() {
     const el = document.querySelector(`[name="${inp.key}"]`);
     if (inp.type === "number") data[inp.key] = Number(el.value);
     else if (inp.type === "matrix")
-      data[inp.key] = el.value.trim().split("\n").map(row => row.trim().split(/\s+/).map(Number));
+      data[inp.key] = el.value.split("\n").filter(row => row.trim())      // bỏ dòng trống
+        .map(row => row.trim().split(/\s+/).map(Number));
     else data[inp.key] = el.value;
   }
   return data;
@@ -842,6 +855,11 @@ function demoSteps(algo) {
    Các ràng buộc riêng (VD m ≤ n, dữ liệu quá lớn) do hàm giải tự báo bằng loiDuLieu(). */
 function kiemTraDuLieu(algo) {
   for (const inp of algo.inputs) {
+    if (inp.type === "matrix") {                                 // ma trận: không chữ, không số âm, phải vuông
+      const kq = docChuMaTran(document.querySelector(`#inputForm [name="${inp.key}"]`).value);
+      if (kq.loi) return { key: inp.key, loi: kq.loi };
+      continue;
+    }
     if (inp.type !== "number" || oDangAn(inp.key)) continue;     // ô đang ẩn thì không cần kiểm tra
     const chu = document.querySelector(`#inputForm [name="${inp.key}"]`).value.trim();
     const so = Number(chu);
@@ -879,6 +897,7 @@ function startSimulation() {
   }
   sim.index = -1;
   document.getElementById("log").innerHTML = "";
+  if (KT.bat) ktTaoCauHoi(); else ktXoa();      // chế độ Tự kiểm tra: chuẩn bị câu hỏi
   goToStep(0);
 
   // Đã đăng nhập thì lưu lần mô phỏng này vào lịch sử (khách thì bỏ qua)
@@ -894,6 +913,7 @@ function resetSimulation() {
   stopAutoPlay();
   sim.steps = [];
   sim.index = -1;
+  ktXoa();
   const log = document.getElementById("log");
   if (log) log.innerHTML = "";
   highlightLine(-1);
@@ -903,6 +923,8 @@ function resetSimulation() {
 // Nhảy tới bước thứ i và vẽ lại
 function goToStep(i) {
   if (i < 0 || i >= sim.steps.length) { stopAutoPlay(); return; }
+  if (ktChan(i)) return;            // chế độ Tự kiểm tra: dừng lại hỏi trước khi hiện bước i
+  ktAnHop();
   sim.index = i;
   const step = sim.steps[i];
 

@@ -234,7 +234,8 @@ const ALGORITHMS = [
         options: ["Nhánh cận", "Vét cạn (quay lui, không cắt nhánh)", "Láng giềng gần nhất (tham lam)"] },
       { key: "matrix", label: "Ma trận chi phí c[i][j]", type: "matrix",
         value: "0 5 8 6 5\n5 0 3 15 8\n8 3 0 3 9\n6 15 3 0 3\n5 8 9 3 0",
-        hint: "Hàng i, cột j là chi phí đi từ thành phố i đến j. Đường chéo bỏ qua, số 0 = không có đường. Nên dùng 4 đến 6 thành phố." },
+        ngauNhien: { kieu: "dayDu", max: 30 },
+        hint: "Ô hàng i, cột j là chi phí đi từ thành phố i đến j; 0 = không có đường. Nên dùng 4 đến 6 thành phố." },
       { key: "start", label: "Thành phố xuất phát", type: "number", value: 1 },
       { key: "cheDo", label: "Hiển thị", type: "select",
         options: ["Chi tiết từng dòng mã giả", "Chỉ các nút trên cây tìm kiếm"] }
@@ -297,7 +298,8 @@ const ALGORITHMS = [
       { key: "mode", label: "Thuật toán", type: "select", options: ["BFS (chiều rộng)", "DFS (chiều sâu)"] },
       { key: "matrix", label: "Ma trận kề", type: "matrix",
         value: "0 1 1 0 0\n1 0 0 1 0\n1 0 0 1 1\n0 1 1 0 1\n0 0 1 1 0",
-        hint: "Số khác 0 ở hàng u, cột v = có cạnh u → v. Ma trận đối xứng là đồ thị vô hướng." },
+        ngauNhien: { kieu: "01" },
+        hint: "Ô hàng u, cột v khác 0 = có cạnh u → v. Bật \"Đối xứng\" cho đồ thị vô hướng." },
       { key: "start", label: "Đỉnh bắt đầu", type: "number", value: 1 }
     ],
     pseudo: [
@@ -339,7 +341,8 @@ const ALGORITHMS = [
     inputs: [
       { key: "matrix", label: "Ma trận trọng số", type: "matrix",
         value: "0 4 1 0 0\n4 0 2 5 0\n1 2 0 8 10\n0 5 8 0 2\n0 0 10 2 0",
-        hint: "Hàng u, cột v là độ dài cạnh u → v; 0 = không có cạnh. Trọng số phải không âm." },
+        ngauNhien: { kieu: "trongSo", max: 15 },
+        hint: "Ô hàng u, cột v là độ dài cạnh u → v; 0 = không có cạnh." },
       { key: "start", label: "Đỉnh đầu s", type: "number", value: 1 },
       { key: "end", label: "Đỉnh cuối t", type: "number", value: 5 }
     ],
