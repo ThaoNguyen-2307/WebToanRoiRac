@@ -89,7 +89,7 @@ async function veLichSu() {
       dienDuLieu(h.values);
       addLog("Đã nạp lại dữ liệu từ lịch sử. Bấm \"Bắt đầu mô phỏng\" để chạy.");
     } else {
-      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: h.algoId, values: h.values })); } catch (e) {}
+      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: h.algoId, values: h.values })); } catch (e) { }
       location.hash = `#/algo/${h.algoId}`;
     }
   });
@@ -128,7 +128,7 @@ function renderTopNav() {
       </button>
       <div class="dropdown-menu">
         ${ALGORITHMS.filter(a => a.group === g.id)
-          .map(a => `<a href="#/algo/${a.id}">${a.name}</a>`).join("")}
+      .map(a => `<a href="#/algo/${a.id}">${a.name}</a>`).join("")}
       </div>
     </div>`).join("");
 }
@@ -183,7 +183,8 @@ function router() {
 /* Các tính năng giới thiệu ở trang chủ. Bấm vào -> trang hướng dẫn #/huong-dan/{id}
    steps: các bước sử dụng; meo: mẹo nhỏ; thu: bài để bấm "Thử ngay" (tab: mở sẵn tab nào) */
 const FEATURES = [
-  { id: "mo-phong", icon: "▶", title: "Mô phỏng từng bước",
+  {
+    id: "mo-phong", icon: "▶", title: "Mô phỏng từng bước",
     text: "Xem thuật toán chạy chậm từng bước, có thể tiến, lùi hoặc tự chạy.",
     steps: [
       "Chọn một bài toán: bấm vào thẻ ở trang chủ hoặc chọn trên thanh menu phía trên.",
@@ -194,9 +195,11 @@ const FEATURES = [
       "Bấm <b>⟲</b> để xóa kết quả và làm lại từ đầu."
     ],
     meo: "Ô \"Bước 3 / 15\" ở góc dưới cho biết bạn đang ở bước nào trên tổng số bước.",
-    thu: { algo: "hanoi" } },
+    thu: { algo: "hanoi" }
+  },
 
-  { id: "ma-gia", icon: "≡", title: "Mã giả tô sáng",
+  {
+    id: "ma-gia", icon: "≡", title: "Mã giả tô sáng",
     text: "Dòng mã giả đang thực hiện được tô sáng để dễ theo dõi.",
     steps: [
       "Mở một bài toán bất kỳ. Khung <b>Mã giả</b> nằm ở cột bên phải.",
@@ -205,9 +208,11 @@ const FEATURES = [
       "Đọc khung <b>Giải thích từng bước</b> ngay bên dưới để biết ở bước đó thuật toán làm gì."
     ],
     meo: "Vừa nhìn hình vẽ ở giữa vừa nhìn dòng tô vàng giúp bạn nối được \"code\" với \"hình\", đây là cách nhớ thuật toán nhanh nhất.",
-    thu: { algo: "nhau" } },
+    thu: { algo: "nhau" }
+  },
 
-  { id: "nhap-du-lieu", icon: "✎", title: "Tự nhập dữ liệu",
+  {
+    id: "nhap-du-lieu", icon: "✎", title: "Tự nhập dữ liệu",
     text: "Nhập số, danh sách hoặc ma trận của riêng bạn để web giải.",
     steps: [
       "<b>Số</b> (ví dụ số đĩa n, kích thước bàn cờ): gõ trực tiếp vào ô.",
@@ -217,9 +222,11 @@ const FEATURES = [
     ],
     vidu: "0 4 1 0\n4 0 2 5\n1 2 0 8\n0 5 8 0",
     meo: "Nên nhập dữ liệu nhỏ (4 đến 6 đỉnh, n ≤ 8) để hình vẽ dễ nhìn và mô phỏng không quá dài.",
-    thu: { algo: "dijkstra" } },
+    thu: { algo: "dijkstra" }
+  },
 
-  { id: "vi-du", icon: "★", title: "Ví dụ có sẵn",
+  {
+    id: "vi-du", icon: "★", title: "Ví dụ có sẵn",
     text: "Mỗi thuật toán có sẵn các bài mẫu, bấm một nút là chạy.",
     steps: [
       "Mở một bài toán, nhìn mục <b>Ví dụ có sẵn</b> ở cột bên trái.",
@@ -228,9 +235,11 @@ const FEATURES = [
       "Bấm <b>Mặc định</b> để quay về dữ liệu ban đầu."
     ],
     meo: "Đăng nhập để mỗi bài bạn đã chạy được lưu vào cột Lịch sử bên trái, lần sau bấm vào là mở lại ngay.",
-    thu: { algo: "hanoi" } },
+    thu: { algo: "hanoi" }
+  },
 
-  { id: "ly-thuyet", icon: "✦", title: "Lý thuyết ngắn gọn",
+  {
+    id: "ly-thuyet", icon: "✦", title: "Lý thuyết ngắn gọn",
     text: "Ý tưởng, mã giả và độ phức tạp của từng thuật toán.",
     steps: [
       "Mở một bài toán, bấm tab <b>Lý thuyết</b> (ngay cạnh tab Mô phỏng).",
@@ -239,9 +248,11 @@ const FEATURES = [
       "Quay lại tab <b>Mô phỏng</b> để xem thuật toán chạy thật."
     ],
     meo: "Nên đọc lý thuyết trước rồi mới mô phỏng: bạn sẽ đoán trước được bước tiếp theo và hiểu sâu hơn.",
-    thu: { algo: "bfsdfs", tab: "ly-thuyet" } },
+    thu: { algo: "bfsdfs", tab: "ly-thuyet" }
+  },
 
-  { id: "so-sanh", icon: "⇄", title: "So sánh kỹ thuật",
+  {
+    id: "so-sanh", icon: "⇄", title: "So sánh kỹ thuật",
     text: "So sánh đệ quy thường với quy hoạch động, quay lui với nhánh cận.",
     steps: [
       "Mở bài <b>Fibonacci</b>, ở ô <b>Cách giải</b> chọn \"Đệ quy thường\" rồi mô phỏng, ghi lại số bước.",
@@ -250,7 +261,8 @@ const FEATURES = [
       "Với bài <b>Người du lịch (TSP)</b>: các nhánh bị <b>cắt bỏ</b> (vì chắc chắn không tốt hơn kết quả đang có) được tô xám, cho thấy nhánh cận nhanh hơn quay lui thường."
     ],
     meo: "Thử với n lớn dần (5, 6, 7...) để thấy khoảng cách giữa hai cách giải tăng rất nhanh.",
-    thu: { algo: "fibonacci" } }
+    thu: { algo: "fibonacci" }
+  }
 ];
 
 /* ---------- TRANG HƯỚNG DẪN ---------- */
@@ -330,7 +342,7 @@ function renderGioiThieu() {
           <div class="gt-the">
             <h3><span>${NAV_ICONS?.[g.id] || g.icon}</span>${g.name}</h3>
             ${ALGORITHMS.filter(a => a.group === g.id).map(a =>
-              `<a href="#/algo/${a.id}">${a.name}<small>${a.complexity}</small></a>`).join("")}
+    `<a href="#/algo/${a.id}">${a.name}<small>${a.complexity}</small></a>`).join("")}
           </div>`).join("")}
       </div>
 
@@ -375,8 +387,8 @@ function renderHome() {
       <h2>Học thuật toán đơn giản hơn</h2>
       <div class="algo-grid">
         ${ALGORITHMS.map(a => {
-          const hinh = MINH_HOA[a.id] || { mau: "#34403a", svg: "" };
-          return `
+    const hinh = MINH_HOA[a.id] || { mau: "#34403a", svg: "" };
+    return `
           <a class="algo-card" href="#/algo/${a.id}">
             <div class="algo-art" style="background:${hinh.mau}">
               <svg viewBox="0 0 200 200" aria-hidden="true">${hinh.svg}</svg>
@@ -384,7 +396,7 @@ function renderHome() {
             <h3>${a.name}</h3>
             <p>${a.short}</p>
           </a>`;
-        }).join("")}
+  }).join("")}
       </div>
     </section>
 
@@ -481,7 +493,7 @@ function renderAlgoPage(algo) {
           <!-- BÀI CỦA TÔI: dữ liệu người dùng tự lưu (cần đăng nhập) -->
           <div class="bai-head">
             <h4>Bài của tôi</h4>
-            <button class="link-nho" id="btnLuuBai" type="button" hidden>💾 Lưu bài này</button>
+            <button class="link-nho" id="btnLuuBai" type="button" hidden> Lưu bài này</button>
           </div>
           <form class="luu-bai" id="formLuuBai" hidden>
             <input name="ten" maxlength="60" placeholder="Đặt tên cho bài, VD: Bài 3 trong slide" aria-label="Tên bài">
@@ -493,7 +505,7 @@ function renderAlgoPage(algo) {
           <div class="alert" id="tbLuuBai" hidden></div>
           <div class="examples" id="baiCuaToi"><small class="hint">Đang tải...</small></div>
           <button class="btn primary full" id="btnRun">▶ Bắt đầu mô phỏng</button>
-          <button class="btn full nut-so-sanh" id="btnSoSanh" hidden>📊 So sánh các cách giải</button>
+          <button class="btn full nut-so-sanh" id="btnSoSanh" hidden> So sánh các cách giải</button>
         </aside>
 
         <!-- Cột giữa: khu vực vẽ + nút điều khiển -->
@@ -512,7 +524,7 @@ function renderAlgoPage(algo) {
               <input type="range" id="speed" min="1" max="5" value="3">
             </label>
             <label class="tu-kiem-tra" title="Web sẽ dừng lại hỏi bạn bước tiếp theo trước khi hiện">
-              <input type="checkbox" id="chkKiemTra"> 🧠 Tự kiểm tra</label>
+              <input type="checkbox" id="chkKiemTra"> Tự kiểm tra</label>
             <span class="pill diem-kt" id="diemKT" hidden></span>
             <span class="step-count" id="stepCount">Bước 0 / 0</span>
           </div>
@@ -598,9 +610,9 @@ function napLaiTuLichSu(algo) {
       sessionStorage.removeItem("napLai");
       dienDuLieu(luu.values);
       addLog(luu.ten ? `Đã mở bài "${escapeHtml(luu.ten)}". Bấm "Bắt đầu mô phỏng" để chạy.`
-                     : "Đã nạp lại dữ liệu từ lịch sử.");
+        : "Đã nạp lại dữ liệu từ lịch sử.");
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 /* ---------- BÀI CỦA TÔI ----------
@@ -633,7 +645,7 @@ async function taiBaiCuaToi(algo) {
   if (currentAlgo !== algo) return;
 
   if (!baiCuaToi.length) {
-    khung.innerHTML = `<small class="hint">Chưa có bài nào. Nhập dữ liệu rồi bấm "💾 Lưu bài này".</small>`;
+    khung.innerHTML = `<small class="hint">Chưa có bài nào. Nhập dữ liệu rồi bấm "Lưu bài này".</small>`;
     return;
   }
   khung.innerHTML = baiCuaToi.map((b, i) => `
@@ -1010,11 +1022,11 @@ function xuLyPhimTat(ev) {
   const phim = ev.key === " " ? "Space" : ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
   const lenh = {
     ArrowRight: () => { stopAutoPlay(); sim.steps.length ? goToStep(sim.index + 1) : startSimulation(); },
-    ArrowLeft:  () => { stopAutoPlay(); goToStep(sim.index - 1); },
-    Space:      () => toggleAutoPlay(),
-    Home:       () => { stopAutoPlay(); if (sim.steps.length) goToStep(0); },
-    End:        () => { stopAutoPlay(); if (sim.steps.length) goToStep(sim.steps.length - 1); },
-    r:          () => resetSimulation()
+    ArrowLeft: () => { stopAutoPlay(); goToStep(sim.index - 1); },
+    Space: () => toggleAutoPlay(),
+    Home: () => { stopAutoPlay(); if (sim.steps.length) goToStep(0); },
+    End: () => { stopAutoPlay(); if (sim.steps.length) goToStep(sim.steps.length - 1); },
+    r: () => resetSimulation()
   }[phim];
   if (!lenh) return;
   ev.preventDefault();                       // Space không cuộn trang, mũi tên không cuộn ngang
