@@ -32,6 +32,7 @@ web-toan-roi-rac/
 │   ├── data.js           Dữ liệu các thuật toán (tên, ô nhập, mã giả)
 │   ├── main.js           Trang khách: menu, trang thuật toán, bộ điều khiển mô phỏng
 │   ├── minh-hoa.js       Biểu tượng, hình minh họa SVG cho menu và thẻ thuật toán
+│   ├── chan-trang.js     Thông tin đồ án (tên SV, MSSV, GVHD...) + chân trang
 │   ├── thuat-toan/       Mỗi thuật toán 1 file: hàm giải SOLVERS, hàm vẽ VE, lý thuyết
 │   │   ├── lietke.js     Liệt kê nhị phân, hoán vị, tổ hợp (quay lui)
 │   │   ├── nhau.js       Xếp n quân hậu (quay lui)

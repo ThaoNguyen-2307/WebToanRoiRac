@@ -161,6 +161,10 @@ function router() {
     renderAlgoPage(algo);
     highlightNav(algo.id);
     if (parts[3] === "ly-thuyet") document.querySelector('.tab[data-tab="theory"]').click();
+  } else if (parts[1] === "gioi-thieu") {
+    document.body.classList.add("home");      // trang giới thiệu: dàn rộng như trang chủ
+    renderGioiThieu();
+    highlightNav(null);
   } else if (huongDan) {
     document.body.classList.add("home");      // trang hướng dẫn: dàn rộng như trang chủ
     renderGuide(huongDan);
@@ -280,10 +284,69 @@ function renderGuide(f) {
         ${FEATURES.filter(x => x.id !== f.id).map(x => `
           <a href="#/huong-dan/${x.id}"><span class="feature-icon">${x.icon}</span>${x.title}</a>`).join("")}
       </div>
-    </div>
-    <footer class="footer">
-      Đồ án cơ sở ngành · Khoa Công nghệ Thông tin · Trường Đại học Nha Trang
-    </footer>`;
+    </div>`;
+}
+
+/* ---------- TRANG GIỚI THIỆU ĐỒ ÁN (#/gioi-thieu) ----------
+   Thông tin sinh viên, giảng viên lấy từ THONG_TIN_DO_AN trong js/chan-trang.js */
+function renderGioiThieu() {
+  const T = THONG_TIN_DO_AN;
+  const dong = (nhan, giaTri) => giaTri ? `<tr><th>${nhan}</th><td>${giaTri}</td></tr>` : "";
+  const soViDuToiThieu = 5;
+  app.innerHTML = `
+    <div class="guide gioi-thieu">
+      <a class="guide-back" href="#/">← Trang chủ</a>
+      <div class="guide-head">
+        <span class="feature-icon big">ⓘ</span>
+        <div>
+          <span class="crumb">Giới thiệu</span>
+          <h1>Về đồ án này</h1>
+          <p>${T.deTai}.</p>
+        </div>
+      </div>
+
+      <table class="gt-bang">
+        ${dong("Học phần", T.hocPhan)}
+        ${dong("Sinh viên thực hiện", T.sinhVien)}
+        ${dong("Mã số sinh viên", T.mssv)}
+        ${dong("Lớp", T.lop)}
+        ${dong("Giảng viên hướng dẫn", T.gvhd)}
+        ${dong("Đơn vị", `${T.khoa}, ${T.truong}`)}
+        ${dong("Năm thực hiện", T.nam)}
+        ${dong("Mã nguồn", T.github ? `<a class="link" href="${T.github}" target="_blank" rel="noopener">${T.github.replace("https://", "")}</a>` : "")}
+      </table>
+
+      <h2>Mục tiêu</h2>
+      <ul class="gt-ds">
+        <li>Trực quan hóa cách các thuật toán của môn Toán rời rạc hoạt động: chạy từng bước, tô sáng dòng mã giả, giải thích bằng tiếng Việt.</li>
+        <li>Giải các bài toán tiêu biểu trong bài giảng, mỗi thuật toán có ít nhất ${soViDuToiThieu} ví dụ.</li>
+        <li>Cho người dùng tự nhập dữ liệu, kể cả ma trận kề, ma trận chi phí của đồ thị.</li>
+        <li>So sánh các kỹ thuật: đệ quy thường với quy hoạch động, vét cạn với nhánh cận.</li>
+      </ul>
+
+      <h2>Các thuật toán</h2>
+      <div class="gt-nhom">
+        ${GROUPS.map(g => `
+          <div class="gt-the">
+            <h3><span>${NAV_ICONS?.[g.id] || g.icon}</span>${g.name}</h3>
+            ${ALGORITHMS.filter(a => a.group === g.id).map(a =>
+              `<a href="#/algo/${a.id}">${a.name}<small>${a.complexity}</small></a>`).join("")}
+          </div>`).join("")}
+      </div>
+
+      <h2>Chức năng theo vai trò</h2>
+      <div class="gt-vai-tro">
+        <div><b>Khách</b><p>Xem lý thuyết, chạy mô phỏng mọi thuật toán, dùng ví dụ có sẵn, tự nhập dữ liệu.</p></div>
+        <div><b>Người dùng đã đăng nhập</b><p>Tự động lưu lịch sử mô phỏng, lưu “Bài của tôi”, đổi tên, ảnh đại diện, mật khẩu.</p></div>
+        <div><b>Quản trị viên</b><p>Xem thống kê, phân quyền và khóa tài khoản, quản lý ví dụ cho từng thuật toán.</p></div>
+      </div>
+
+      <h2>Công nghệ sử dụng</h2>
+      <div class="gt-cong-nghe">
+        <span>HTML, CSS, JavaScript</span><span>SVG (vẽ hình mô phỏng)</span>
+        <span>Firebase Authentication</span><span>Cloud Firestore</span><span>Git, GitHub</span>
+      </div>
+    </div>`;
 }
 
 let homeGroup = "quaylui";   // nhóm đang chọn ở trang chủ
@@ -333,11 +396,7 @@ function renderHome() {
           <div><strong>${f.title}</strong><p>${f.text}</p>
             <span class="feature-more">Xem hướng dẫn →</span></div>
         </a>`).join("")}
-    </section>
-
-    <footer class="footer">
-      Đồ án cơ sở ngành · Khoa Công nghệ Thông tin · Trường Đại học Nha Trang
-    </footer>`;
+    </section>`;
 
   // Bấm vào nhóm -> đổi danh sách bài toán bên dưới
   document.querySelectorAll(".group-tab").forEach(tab => {
