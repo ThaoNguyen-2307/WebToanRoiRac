@@ -228,66 +228,134 @@ const ALGORITHMS = [
     id: "tsp",
     name: "Người du lịch (TSP)",
     group: "nhanhcan",
-    short: "Tìm hành trình đi qua mọi thành phố đúng 1 lần, quay về điểm đầu, chi phí nhỏ nhất.",
+    short: "Tìm hành trình đi qua mọi thành phố đúng 1 lần rồi quay về, tổng chi phí nhỏ nhất. Giải bằng nhánh cận, so sánh với vét cạn và tham lam.",
     inputs: [
-      { key: "matrix", label: "Ma trận chi phí", type: "matrix",
-        value: "0 20 42 35\n20 0 30 34\n42 30 0 12\n35 34 12 0" }
+      { key: "mode", label: "Cách giải", type: "select",
+        options: ["Nhánh cận", "Vét cạn (quay lui, không cắt nhánh)", "Láng giềng gần nhất (tham lam)"] },
+      { key: "matrix", label: "Ma trận chi phí c[i][j]", type: "matrix",
+        value: "0 5 8 6 5\n5 0 3 15 8\n8 3 0 3 9\n6 15 3 0 3\n5 8 9 3 0",
+        hint: "Hàng i, cột j là chi phí đi từ thành phố i đến j. Đường chéo bỏ qua, số 0 = không có đường. Nên dùng 4 đến 6 thành phố." },
+      { key: "start", label: "Thành phố xuất phát", type: "number", value: 1 },
+      { key: "cheDo", label: "Hiển thị", type: "select",
+        options: ["Chi tiết từng dòng mã giả", "Chỉ các nút trên cây tìm kiếm"] }
     ],
     pseudo: [
       "Try(i):",
-      "  for j in các thành phố chưa đi:",
-      "    x[i] = j; cộng chi phí",
-      "    if i == n: cập nhật kỷ lục",
-      "    else if chi phí + cận dưới < kỷ lục:",
-      "      Try(i + 1)",
-      "    // ngược lại: cắt nhánh",
-      "    trừ chi phí  // quay lui"
+      "  for j chưa đi:",
+      "    x[i] = j; S += c[x[i-1]][j]",
+      "    if i == n:",
+      "      T = S + c[j][x[1]]",
+      "      if T < kyLuc: lưu kỷ lục",
+      "    else: g = S + (n-i+1)*cmin",
+      "      if g < kyLuc: Try(i + 1)",
+      "      else: cắt nhánh",
+      "    S -= c[x[i-1]][j] //quay lui"
     ],
-    complexity: "Xấu nhất O(n!), cắt nhánh giúp nhanh hơn nhiều"
+    maGiaTheo: {
+      key: "mode",
+      "Nhánh cận": [
+        "Try(i):",
+        "  for j chưa đi:",
+        "    x[i] = j; S += c[x[i-1]][j]",
+        "    if i == n:",
+        "      T = S + c[j][x[1]]",
+        "      if T < kyLuc: lưu kỷ lục",
+        "    else: g = S + (n-i+1)*cmin",
+        "      if g < kyLuc: Try(i + 1)",
+        "      else: cắt nhánh",
+        "    S -= c[x[i-1]][j] //quay lui"
+      ],
+      "Vét cạn (quay lui, không cắt nhánh)": [
+        "Try(i):",
+        "  for j chưa đi:",
+        "    x[i] = j; S += c[x[i-1]][j]",
+        "    if i == n:",
+        "      T = S + c[j][x[1]]",
+        "      if T < kyLuc: lưu kỷ lục",
+        "    else: Try(i + 1)",
+        "    // không tính cận dưới",
+        "    // nên không cắt nhánh nào",
+        "    S -= c[x[i-1]][j] //quay lui"
+      ],
+      "Láng giềng gần nhất (tham lam)": [
+        "u = x[1] = xuất phát; S = 0",
+        "for i = 2..n:",
+        "  j = chưa đi, gần u nhất",
+        "  x[i] = j; S += c[u][j]; u = j",
+        "S += c[u][x[1]]   //quay về",
+        "return S"
+      ]
+    },
+    complexity: "Vét cạn O(n!); nhánh cận xấu nhất O(n!) nhưng thường cắt được rất nhiều nhánh; tham lam O(n²)"
   },
   {
     id: "bfsdfs",
     name: "Duyệt đồ thị BFS, DFS",
     group: "dothi",
-    short: "Thăm tất cả các đỉnh của đồ thị theo chiều rộng hoặc chiều sâu.",
+    short: "Thăm tất cả các đỉnh của đồ thị theo chiều rộng (hàng đợi) hoặc chiều sâu (đệ quy).",
     inputs: [
       { key: "mode", label: "Thuật toán", type: "select", options: ["BFS (chiều rộng)", "DFS (chiều sâu)"] },
       { key: "matrix", label: "Ma trận kề", type: "matrix",
-        value: "0 1 1 0 0\n1 0 0 1 0\n1 0 0 1 1\n0 1 1 0 1\n0 0 1 1 0" },
-      { key: "start", label: "Đỉnh bắt đầu", type: "number", value: 1, min: 1, max: 10 }
+        value: "0 1 1 0 0\n1 0 0 1 0\n1 0 0 1 1\n0 1 1 0 1\n0 0 1 1 0",
+        hint: "Số khác 0 ở hàng u, cột v = có cạnh u → v. Ma trận đối xứng là đồ thị vô hướng." },
+      { key: "start", label: "Đỉnh bắt đầu", type: "number", value: 1 }
     ],
     pseudo: [
       "BFS(s):",
-      "  đánh dấu s; đưa s vào hàng đợi Q",
+      "  đánh dấu s; Q = [s]",
       "  while Q không rỗng:",
       "    u = lấy đầu Q; thăm u",
       "    for v kề với u:",
       "      if v chưa đánh dấu:",
-      "        đánh dấu v; đưa v vào Q"
+      "        đánh dấu v; thêm v vào Q"
     ],
-    complexity: "O(V + E)"
+    maGiaTheo: {
+      key: "mode",
+      "BFS (chiều rộng)": [
+        "BFS(s):",
+        "  đánh dấu s; Q = [s]",
+        "  while Q không rỗng:",
+        "    u = lấy đầu Q; thăm u",
+        "    for v kề với u:",
+        "      if v chưa đánh dấu:",
+        "        đánh dấu v; thêm v vào Q"
+      ],
+      "DFS (chiều sâu)": [
+        "DFS(u):",
+        "  đánh dấu u; thăm u",
+        "  for v kề với u:",
+        "    if v chưa đánh dấu:",
+        "      DFS(v)",
+        "  // hết đỉnh kề: quay lui"
+      ]
+    },
+    complexity: "O(n²) với ma trận kề (O(V + E) với danh sách kề)"
   },
   {
     id: "dijkstra",
     name: "Dijkstra — đường đi ngắn nhất",
     group: "dothi",
-    short: "Tìm đường đi ngắn nhất từ một đỉnh đến các đỉnh khác (trọng số không âm).",
+    short: "Tìm đường đi ngắn nhất từ một đỉnh đến các đỉnh khác trên đồ thị có trọng số không âm.",
     inputs: [
-      { key: "matrix", label: "Ma trận trọng số (0 = không có cạnh)", type: "matrix",
-        value: "0 4 1 0 0\n4 0 2 5 0\n1 2 0 8 10\n0 5 8 0 2\n0 0 10 2 0" },
-      { key: "start", label: "Đỉnh đầu", type: "number", value: 1, min: 1, max: 10 },
-      { key: "end", label: "Đỉnh cuối", type: "number", value: 5, min: 1, max: 10 }
+      { key: "matrix", label: "Ma trận trọng số", type: "matrix",
+        value: "0 4 1 0 0\n4 0 2 5 0\n1 2 0 8 10\n0 5 8 0 2\n0 0 10 2 0",
+        hint: "Hàng u, cột v là độ dài cạnh u → v; 0 = không có cạnh. Trọng số phải không âm." },
+      { key: "start", label: "Đỉnh đầu s", type: "number", value: 1 },
+      { key: "end", label: "Đỉnh cuối t", type: "number", value: 5 }
     ],
     pseudo: [
       "d[s] = 0; d[v] = ∞ với v ≠ s",
       "while còn đỉnh chưa chốt:",
-      "  u = đỉnh chưa chốt có d[u] nhỏ nhất",
+      "  u = chưa chốt, d[u] nhỏ nhất",
+      "  if d[u] == ∞: dừng",
       "  chốt u",
-      "  for v kề với u:",
+      "  for v kề u, v chưa chốt:",
       "    if d[u] + w(u,v) < d[v]:",
-      "      d[v] = d[u] + w(u,v); trước[v] = u"
+      "      d[v] = d[u] + w(u,v)",
+      "      truoc[v] = u",
+      "truy vết từ t về s qua truoc[]"
     ],
-    complexity: "O(V²)"
+    complexity: "O(n²) với ma trận kề"
   }
 ];
 

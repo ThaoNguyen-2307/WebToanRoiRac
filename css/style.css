@@ -2826,3 +2826,286 @@ body.home .content {
   padding: 1px 6px;
   border-radius: 999px;
 }
+/* =========================================================
+   ĐỒ THỊ (TSP, BFS/DFS, Dijkstra) — vẽ bởi veDoThi() trong do-thi.js
+   ========================================================= */
+.dt-hang {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.dt-svg {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  flex: 1 1 300px;
+}
+
+.dt-ben {
+  flex: 1 1 220px;
+  max-width: 340px;
+  text-align: left;
+}
+
+.dt-canh {
+  fill: none;
+  stroke: #c9cec6;
+  stroke-width: 2;
+}
+
+.dt-canh.cay {
+  stroke: var(--primary);
+  stroke-width: 3.5;
+}
+
+.dt-canh.duong {
+  stroke: var(--primary);
+  stroke-width: 4;
+}
+
+.dt-canh.toi-uu {
+  stroke: #2b8a3e;
+  stroke-width: 3;
+  stroke-dasharray: 7 5;
+}
+
+.dt-canh.dang-xet {
+  stroke: #e8a33d;
+  stroke-width: 4;
+}
+
+.dt-mui {
+  fill: #c9cec6;
+}
+
+.dt-mui.cay,
+.dt-mui.duong {
+  fill: var(--primary);
+}
+
+.dt-mui.toi-uu {
+  fill: #2b8a3e;
+}
+
+.dt-mui.dang-xet {
+  fill: #e8a33d;
+}
+
+.dt-trong-so {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--mono);
+  text-anchor: middle;
+  fill: #555;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+}
+
+.dt-trong-so.duong,
+.dt-trong-so.cay {
+  fill: var(--primary);
+}
+
+.dt-trong-so.dang-xet {
+  fill: #b86e00;
+}
+
+.dt-dinh circle {
+  fill: #fff;
+  stroke: #8a9187;
+  stroke-width: 2.5;
+}
+
+.dt-dinh text {
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+  font-family: var(--mono);
+  fill: #1f2a14;
+}
+
+.dt-dinh .dt-phu {
+  font-size: 12px;
+  fill: #b86e00;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+}
+
+.dt-dinh.cho circle {
+  fill: #e7f0ff;
+  stroke: #3b6fd1;
+}
+
+.dt-dinh.da-tham circle {
+  fill: #ebfbee;
+  stroke: #2b8a3e;
+}
+
+.dt-dinh.tren-duong circle {
+  fill: var(--primary);
+  stroke: var(--primary);
+}
+
+.dt-dinh.tren-duong > text:not(.dt-phu) {
+  fill: #fff;
+}
+
+.dt-dinh.dang-xet circle {
+  fill: #fff3bf;
+  stroke: #e8a33d;
+  stroke-width: 3;
+}
+
+.dt-dinh.hien-tai circle {
+  fill: #ffd43b;
+  stroke: #1f2a14;
+  stroke-width: 3;
+}
+
+/* Ma trận và bảng d[] */
+.bang-mt {
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 13px;
+  margin: 0 auto 8px;
+}
+
+.bang-mt th,
+.bang-mt td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  text-align: center;
+  min-width: 30px;
+}
+
+.bang-mt th {
+  background: var(--bg);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.bang-mt td.cheo {
+  color: #c9cec6;
+}
+
+.bang-mt td.duong {
+  background: var(--primary-soft);
+  font-weight: 700;
+}
+
+.bang-mt td.dang-xet {
+  background: #ffd43b;
+  font-weight: 700;
+}
+
+.bang-mt td.chot {
+  background: #ebfbee;
+  color: #2b8a3e;
+  font-weight: 700;
+}
+
+.bang-mt th.dau,
+.bang-mt th.cuoi {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Hàng đợi / ngăn xếp và thứ tự thăm */
+.hang-doi,
+.thu-tu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 34px;
+  margin-bottom: 12px;
+}
+
+.hang-doi.doc {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hang-doi span,
+.thu-tu span {
+  font-family: var(--mono);
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #e7f0ff;
+  border: 2px solid #3b6fd1;
+}
+
+.hang-doi span.dau {
+  background: #ffd43b;
+  border-color: #1f2a14;
+}
+
+.thu-tu span {
+  background: #ebfbee;
+  border-color: #2b8a3e;
+}
+
+.thu-tu i {
+  font-style: normal;
+  color: var(--muted);
+}
+
+.hang-doi em,
+.thu-tu em {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Chú thích thêm */
+.cham.cat {
+  background: #ffe3e3;
+  border-color: #c92a2a;
+}
+
+.cham.dang-xet {
+  background: #fff3bf;
+  border-color: #e8a33d;
+}
+
+.cham.cho {
+  background: #e7f0ff;
+  border-color: #3b6fd1;
+}
+
+.vach {
+  display: inline-block;
+  width: 18px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+/* TSP: cây tìm kiếm có nút bị cắt */
+.tsp-cay {
+  margin-top: 12px;
+}
+
+.cay-nut.cat circle {
+  fill: #ffe3e3;
+  stroke: #c92a2a;
+}
+
+.cay-nut.cat text {
+  fill: #c92a2a;
+}
+
+.cay-nut .dau-cat {
+  font-size: 11px;
+  fill: #c92a2a;
+}
+
+/* Ô có 2 dòng gợi ý (VD ô ma trận) thì mỗi gợi ý 1 dòng */
+.field .hint {
+  display: block;
+}
