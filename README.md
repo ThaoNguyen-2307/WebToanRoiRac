@@ -36,6 +36,7 @@ web-toan-roi-rac/
 │   ├── o-ma-tran.js      Ô nhập ma trận dạng bảng n × n (kiểm tra dữ liệu, xem trước đồ thị)
 │   ├── tu-kiem-tra.js    Chế độ Tự kiểm tra: câu hỏi trắc nghiệm trong lúc mô phỏng
 │   ├── so-sanh.js        So sánh các cách giải trên cùng dữ liệu (bảng + biểu đồ)
+│   ├── de-bai.js         Đề bài tự sinh từ dữ liệu đang nhập
 │   ├── thuat-toan/       Mỗi thuật toán 1 file: hàm giải SOLVERS, hàm vẽ VE, lý thuyết
 │   │   ├── lietke.js     Liệt kê nhị phân, hoán vị, tổ hợp (quay lui)
 │   │   ├── nhau.js       Xếp n quân hậu (quay lui)

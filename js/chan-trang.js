@@ -30,7 +30,7 @@ function veChanTrang() {
     <div class="ft-cot">
       <h4>${g.name}</h4>
       ${ALGORITHMS.filter(a => a.group === g.id).map(a =>
-    `<a href="${goc}#/algo/${a.id}">${a.name.split(/[:—(]/)[0].trim()}</a>`).join("")}
+        `<a href="${goc}#/algo/${a.id}">${a.name.split(/[:—(]/)[0].trim()}</a>`).join("")}
     </div>`).join("") : "";
 
   chan.innerHTML = `
@@ -40,7 +40,7 @@ function veChanTrang() {
         <div class="ft-lien-ket">
           <a href="${goc}#/gioi-thieu">Giới thiệu đồ án</a>
           <a href="${goc}#/huong-dan/mo-phong">Hướng dẫn sử dụng</a>
-          ${T.github ? `<a href="${T.github}" target="_blank" rel="noopener">Mã nguồn GitHub</a>` : ""}
+          ${T.github ? `<a href="${T.github}" target="_blank" rel="noopener">Mã nguồn GitHub ↗</a>` : ""}
         </div>
       </div>
       ${cotThuatToan}
