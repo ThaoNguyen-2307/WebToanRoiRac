@@ -1,10 +1,3 @@
-/* =========================================================
-   firebase.js — PHẦN DÙNG CHUNG cho mọi trang
-   - Kết nối Firebase (đăng nhập + cơ sở dữ liệu Firestore)
-   - Lấy / tạo hồ sơ người dùng, phân quyền (user | admin)
-   - Vẽ khu vực "Đăng nhập / tên người dùng" trên thanh tiêu đề
-   (Giống includes/init.php + kiem_tra_quyen.php + ham_chung.php trong bài PHP)
-   ========================================================= */
 import { firebaseConfig } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut }
@@ -12,7 +5,6 @@ import { getAuth, onAuthStateChanged, signOut }
 import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Đã điền thông tin Firebase chưa? (còn chữ "DIEN_" nghĩa là chưa)
 export const daCauHinh = !Object.values(firebaseConfig).some(v => String(v).includes("DIEN_"));
 
 export let auth = null;
@@ -20,7 +12,7 @@ export let db = null;
 if (daCauHinh) {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
-  auth.languageCode = "vi";          // email/hộp thoại của Firebase bằng tiếng Việt
+  auth.languageCode = "vi";
   db = getFirestore(app);
 }
 
@@ -34,7 +26,7 @@ export async function layHoSo(user, tenMacDinh = "") {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
   if (snap.exists()) {
-    updateDoc(ref, { lanCuoi: serverTimestamp() }).catch(() => {});
+    updateDoc(ref, { lanCuoi: serverTimestamp() }).catch(() => { });
     return { uid: user.uid, ...snap.data() };
   }
   // Lần đầu đăng nhập -> tạo hồ sơ mới, mặc định là người dùng thường
@@ -65,7 +57,7 @@ export function theoDoiDangNhap(callback) {
     try {
       const hoSo = await layHoSo(user);
       if (hoSo.biKhoa) {                              // tài khoản bị admin khóa -> đăng xuất
-        try { sessionStorage.setItem("thongBao", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên."); } catch (e) {}
+        try { sessionStorage.setItem("thongBao", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên."); } catch (e) { }
         await signOut(auth);                          // lần gọi sau sẽ là callback(null, null)
         return;
       }
