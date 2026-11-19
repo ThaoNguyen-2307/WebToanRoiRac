@@ -9,8 +9,8 @@ const THONG_TIN_DO_AN = {
   deTai: "Xây dựng ứng dụng Web hỗ trợ học và mô phỏng các thuật toán trong toán rời rạc",
   hocPhan: "Đồ án cơ sở ngành",
   sinhVien: "Nguyễn Đỗ Thảo Nguyên",
-  mssv: "",                                   // điền mã số sinh viên, VD "66xxxxxxx"
-  lop: "",                                    // điền lớp, VD "66.CNTT-1"
+  mssv: "66132371",
+  lop: "66CNPM",
   gvhd: "ThS. Nguyễn Hải Triều",
   khoa: "Khoa Công nghệ Thông tin",
   truong: "Trường Đại học Nha Trang",
@@ -30,7 +30,7 @@ function veChanTrang() {
     <div class="ft-cot">
       <h4>${g.name}</h4>
       ${ALGORITHMS.filter(a => a.group === g.id).map(a =>
-        `<a href="${goc}#/algo/${a.id}">${a.name.split(/[:—(]/)[0].trim()}</a>`).join("")}
+    `<a href="${goc}#/algo/${a.id}">${a.name.split(/[:—(]/)[0].trim()}</a>`).join("")}
     </div>`).join("") : "";
 
   chan.innerHTML = `
@@ -40,7 +40,7 @@ function veChanTrang() {
         <div class="ft-lien-ket">
           <a href="${goc}#/gioi-thieu">Giới thiệu đồ án</a>
           <a href="${goc}#/huong-dan/mo-phong">Hướng dẫn sử dụng</a>
-          ${T.github ? `<a href="${T.github}" target="_blank" rel="noopener">Mã nguồn GitHub ↗</a>` : ""}
+          ${T.github ? `<a href="${T.github}" target="_blank" rel="noopener">Mã nguồn GitHub</a>` : ""}
         </div>
       </div>
       ${cotThuatToan}
