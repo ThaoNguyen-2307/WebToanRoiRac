@@ -5,8 +5,10 @@
    - Bài của tôi (bài đã lưu có đặt tên): mở, đổi tên, xóa
    - Lịch sử các bài đã mô phỏng: mô phỏng lại, xóa
    ========================================================= */
-import { auth, db, yeuCauDangNhap, veThanhNguoiDung, e, anhDaiDien, ngayGio,
-         tenCachDangNhap, loiTiengViet, thongBao } from "./firebase.js";
+import {
+  auth, db, yeuCauDangNhap, veThanhNguoiDung, e, anhDaiDien, ngayGio,
+  tenCachDangNhap, loiTiengViet, thongBao
+} from "./firebase.js";
 import { updateProfile, EmailAuthProvider, reauthenticateWithCredential, updatePassword }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, updateDoc, collection, query, orderBy, limit, getDocs, deleteDoc, writeBatch }
@@ -73,7 +75,7 @@ function veTrang(user, hoSo) {
                 <input type="password" name="nhapLai" autocomplete="new-password" required></label>
               <button class="btn primary">Đổi mật khẩu</button>
             </form>`
-          : `<p class="muted">Bạn đăng nhập bằng ${tenCachDangNhap(hoSo.dangNhapBang)}, nên mật khẩu do
+      : `<p class="muted">Bạn đăng nhập bằng ${tenCachDangNhap(hoSo.dangNhapBang)}, nên mật khẩu do
              ${tenCachDangNhap(hoSo.dangNhapBang)} quản lý. Không cần đổi mật khẩu ở đây.</p>`}
         </section>
       </div>
@@ -148,7 +150,7 @@ async function taiBaiLuu(user) {
     const snap = await getDocs(query(collection(db, "users", user.uid, "baiLuu"), orderBy("ngayTao", "desc")));
     if (snap.empty) {
       khung.innerHTML = `<p class="muted">Bạn chưa lưu bài nào. Ở trang mô phỏng, nhập dữ liệu rồi bấm
-        <b>💾 Lưu bài này</b> (dưới phần "Ví dụ có sẵn") để lưu lại và mở lại sau.</p>`;
+        <b>Lưu bài này</b> (dưới phần "Ví dụ có sẵn") để lưu lại và mở lại sau.</p>`;
       return;
     }
     const theoId = Object.fromEntries(snap.docs.map(d => [d.id, d.data()]));
@@ -157,8 +159,8 @@ async function taiBaiLuu(user) {
         <thead><tr><th>Tên bài</th><th>Bài toán</th><th>Dữ liệu</th><th>Ngày lưu</th><th></th></tr></thead>
         <tbody>
           ${snap.docs.map(d => {
-            const b = d.data();
-            return `<tr>
+      const b = d.data();
+      return `<tr>
               <td class="ten-bai" data-o-ten="${d.id}"><b>${e(b.ten)}</b></td>
               <td>${e(b.algoName)}</td>
               <td class="data-cell">${tomTatDuLieu(b.algoId, b.values)}</td>
@@ -169,14 +171,14 @@ async function taiBaiLuu(user) {
                 <button class="btn sm danger" data-xoa-bai="${d.id}">Xóa</button>
               </div></td>
             </tr>`;
-          }).join("")}
+    }).join("")}
         </tbody>
       </table></div>`;
 
     // Mở: gửi dữ liệu sang trang thuật toán (main.js tự điền vào form)
     khung.querySelectorAll("[data-mo]").forEach(b => b.onclick = () => {
       const bai = theoId[b.dataset.mo];
-      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: bai.algoId, values: bai.values, ten: bai.ten })); } catch (e) {}
+      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: bai.algoId, values: bai.values, ten: bai.ten })); } catch (e) { }
       location.href = `index.html#/algo/${bai.algoId}`;
     });
 
@@ -244,8 +246,8 @@ async function taiLichSu(user) {
         </tr></thead>
         <tbody>
           ${snap.docs.map(d => {
-            const h = d.data();
-            return `<tr>
+      const h = d.data();
+      return `<tr>
               <td class="col-check"><input type="checkbox" class="chon-muc" value="${d.id}" aria-label="Chọn mục này"></td>
               <td class="nowrap">${ngayGio(h.createdAt)}</td>
               <td>${e(h.algoName)}</td>
@@ -255,7 +257,7 @@ async function taiLichSu(user) {
                 <button class="btn sm danger" data-xoa="${d.id}">Xóa</button>
               </div></td>
             </tr>`;
-          }).join("")}
+    }).join("")}
         </tbody>
       </table></div>`;
 
@@ -264,7 +266,7 @@ async function taiLichSu(user) {
     // Mô phỏng lại: ghi tạm dữ liệu rồi mở trang thuật toán, main.js sẽ tự điền vào form
     khung.querySelectorAll("[data-chay]").forEach(b => b.onclick = () => {
       const h = theoId[b.dataset.chay];
-      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: h.algoId, values: h.values })); } catch (e) {}
+      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: h.algoId, values: h.values })); } catch (e) { }
       location.href = `index.html#/algo/${h.algoId}`;
     });
 

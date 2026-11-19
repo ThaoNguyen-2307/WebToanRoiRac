@@ -55,8 +55,8 @@ export function moDoiAnh(anhHienTai = "", ten = "") {
         <div class="alert loi" id="loiAnh" hidden></div>
 
         <div class="anh-nut">
-          <button class="btn" id="nutChonFile" type="button">🖼 Chọn ảnh từ máy</button>
-          <button class="btn" id="nutCamera" type="button">📷 Chụp ảnh</button>
+          <button class="btn" id="nutChonFile" type="button">Chọn ảnh từ máy</button>
+          <button class="btn" id="nutCamera" type="button">Chụp ảnh</button>
           <button class="btn danger" id="nutXoaAnh" type="button">Xóa ảnh</button>
         </div>
         <!-- Trên điện thoại, ô chọn file tự cho phép chụp bằng camera hoặc chọn từ thư viện ảnh -->

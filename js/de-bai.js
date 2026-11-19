@@ -96,7 +96,7 @@ DE_BAI.fibonacci = ({ n, mode }) => {
   const ghi = mode.startsWith("Đệ quy")
     ? (n <= 70 ? ` Cách đệ quy thường sẽ phải gọi hàm <b>${so(Number(2n * fibSo(n) - 1n))}</b> lần.` : "")
     : mode.includes("top-down") ? ` Cách top-down chỉ cần khoảng <b>${so(Math.max(1, 2 * n - 3))}</b> lần gọi hàm.`
-    : ` Cách bottom-up chỉ cần <b>${so(Math.max(0, n - 2))}</b> phép cộng.`;
+      : ` Cách bottom-up chỉ cần <b>${so(Math.max(0, n - 2))}</b> phép cộng.`;
   return {
     tom: `Tính số Fibonacci thứ ${n}.`,
     noiDung: `Dãy Fibonacci: 1, 1, 2, 3, 5, 8, 13, … (mỗi số bằng tổng 2 số đứng trước, f(1) = f(2) = 1).
@@ -187,7 +187,7 @@ function veDeBai() {
   const d = layDeBai();
   viz.innerHTML = d ? `
     <div class="de-bai">
-      <span class="de-bai-nhan">📋 Đề bài</span>
+      <span class="de-bai-nhan">Đề bài</span>
       <p>${d.noiDung}</p>
       ${d.them || ""}
       <p class="de-bai-tim"><b>${d.loi ? "Lưu ý" : "Cần tìm"}:</b> ${d.canTim}</p>
@@ -200,5 +200,5 @@ function veDeBai() {
 /* Khi đang mô phỏng: 1 dòng đề bài thu gọn đặt trên hình vẽ */
 function dongDeBai() {
   const d = layDeBai();
-  return d?.tom ? `<div class="de-bai-gon" title="Đề bài">📋 ${d.tom}</div>` : "";
+  return d?.tom ? `<div class="de-bai-gon" title="Đề bài"> ${d.tom}</div>` : "";
 }
