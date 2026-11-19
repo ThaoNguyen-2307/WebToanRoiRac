@@ -46,6 +46,7 @@ web-toan-roi-rac/
 |---|---|
 | `users/{uid}` | `email, ten, anh, dangNhapBang, vaiTro ("user" / "admin"), biKhoa, ngayTao, lanCuoi` |
 | `users/{uid}/history/{id}` | `algoId, algoName, values, createdAt` (lịch sử mô phỏng của từng người) |
+| `users/{uid}/baiLuu/{id}` | `algoId, algoName, ten, values, ngayTao` (Bài của tôi: dữ liệu người dùng tự lưu, có đặt tên) |
 | `examples/{id}` | `algoId, tieuDe, values, ngayTao` (ví dụ có sẵn, admin quản lý) |
 
 ## Cấu hình Firebase (làm 1 lần)
