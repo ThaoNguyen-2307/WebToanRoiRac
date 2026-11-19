@@ -1,19 +1,3 @@
-/* =========================================================
-   bfsdfs.js — DUYỆT ĐỒ THỊ THEO CHIỀU RỘNG (BFS) VÀ CHIỀU SÂU (DFS)
-   Đồ thị cho bằng ma trận kề: ô (u, v) khác 0 nghĩa là có cạnh u -> v.
-   Ma trận đối xứng -> đồ thị vô hướng; không đối xứng -> có hướng (vẽ mũi tên).
-   Các đỉnh kề được xét theo thứ tự tăng dần.
-
-   Mã giả BFS (data.js):              Mã giả DFS (đệ quy):
-     0 BFS(s):                           0 DFS(u):
-     1   đánh dấu s; Q = [s]             1   đánh dấu u; thăm u
-     2   while Q không rỗng:             2   for v kề với u:
-     3     u = lấy đầu Q; thăm u         3     if v chưa đánh dấu:
-     4     for v kề với u:               4       DFS(v)
-     5       if v chưa đánh dấu:         5   // hết đỉnh kề: quay lui
-     6         đánh dấu v; thêm v vào Q
-   ========================================================= */
-
 const DUYET_BFS = "BFS (chiều rộng)";
 
 SOLVERS.bfsdfs = function (input) {
@@ -94,7 +78,7 @@ SOLVERS.bfsdfs = function (input) {
   return steps;
 };
 
-/* ---------- HÀM VẼ ---------- */
+// Hàm vẽ
 VE.bfsdfs = function (step) {
   const s = step.state;
   const bfs = s.loai === "bfs";
@@ -128,7 +112,7 @@ VE.bfsdfs = function (step) {
     </div>`;
 };
 
-/* ---------- LÝ THUYẾT ---------- */
+// Lý thuyết
 ALGORITHMS.find(a => a.id === "bfsdfs").lyThuyet = `
   <p><b>Đồ thị</b> G = (V, E) gồm tập đỉnh V và tập cạnh E. Trong máy tính, đồ thị n đỉnh thường được lưu bằng
      <b>ma trận kề</b> A cỡ n × n: A[u][v] ≠ 0 nếu có cạnh từ u đến v. Đồ thị vô hướng có ma trận đối xứng.</p>

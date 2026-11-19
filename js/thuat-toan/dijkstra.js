@@ -1,21 +1,3 @@
-/* =========================================================
-   dijkstra.js — ĐƯỜNG ĐI NGẮN NHẤT DIJKSTRA
-   Ma trận trọng số: ô (u, v) > 0 là độ dài cạnh u -> v, 0 = không có cạnh.
-   Ma trận đối xứng -> đồ thị vô hướng; không đối xứng -> có hướng.
-
-   Mã giả (data.js, đánh số từ 0):
-     0 d[s] = 0; d[v] = ∞ với v ≠ s
-     1 while còn đỉnh chưa chốt:
-     2   u = chưa chốt, d[u] nhỏ nhất
-     3   if d[u] == ∞: dừng
-     4   chốt u
-     5   for v kề u, v chưa chốt:
-     6     if d[u] + w(u,v) < d[v]:
-     7       d[v] = d[u] + w(u,v)
-     8       truoc[v] = u
-     9 truy vết từ t về s qua truoc[]
-   ========================================================= */
-
 SOLVERS.dijkstra = function (input) {
   const mt = docMaTran(input.matrix);
   const n = mt.length;
@@ -83,7 +65,7 @@ SOLVERS.dijkstra = function (input) {
   return steps;
 };
 
-/* ---------- HÀM VẼ ---------- */
+// Hàm vẽ
 VE.dijkstra = function (step) {
   const s = step.state;
   const trenDuong = new Set();
@@ -121,7 +103,7 @@ VE.dijkstra = function (step) {
     </div>`;
 };
 
-/* ---------- LÝ THUYẾT ---------- */
+// Lý thuyết
 ALGORITHMS.find(a => a.id === "dijkstra").lyThuyet = `
   <p><b>Bài toán:</b> cho đồ thị có trọng số <b>không âm</b> (ma trận trọng số, 0 = không có cạnh), tìm đường đi ngắn nhất
      từ đỉnh s đến các đỉnh còn lại (trong web: đến đỉnh t).</p>

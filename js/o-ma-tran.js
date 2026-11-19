@@ -1,22 +1,7 @@
-/* =========================================================
-   o-ma-tran.js — Ô NHẬP MA TRẬN DẠNG BẢNG (LƯỚI n × n)
-   Dùng cho các ô có type: "matrix" trong data.js (TSP, BFS/DFS, Dijkstra).
-
-   - Chọn số đỉnh n bằng nút − / +, điền từng ô của bảng
-   - Chỉ cho nhập số nguyên ≥ 0: gõ chữ, dấu trừ, dấu phẩy... sẽ bị chặn và báo lỗi ngay
-   - "Đối xứng": sửa ô (i, j) thì ô (j, i) tự đổi theo (đồ thị vô hướng)
-   - "Ngẫu nhiên", "Xóa hết", "Nhập dạng chữ" (dán cả ma trận từ nơi khác)
-   - Vẽ đồ thị xem trước ngay khi đang nhập
-
-   Dữ liệu thật vẫn nằm trong <textarea name="matrix"> (bị ẩn khi dùng bảng), nên phần đọc dữ liệu,
-   lưu lịch sử, ví dụ có sẵn... không cần sửa gì. Bảng chỉ là cách nhập thuận tiện hơn.
-   ========================================================= */
-
 const OMT_N_MIN = 2;       // ít nhất 2 đỉnh
-const OMT_N_MAX = 12;      // bảng lớn hơn sẽ quá chật; muốn nhiều đỉnh hơn thì dùng "Nhập dạng chữ"
+const OMT_N_MAX = 12;
 const OMT_GIA_TRI_MAX = 999;
 
-/* Đọc ma trận từ chữ. Trả về { mt } nếu đúng, hoặc { loi } nếu sai (kèm vị trí ô sai nếu có) */
 function docChuMaTran(chu) {
   const dong = String(chu).split("\n").map(d => d.trim()).filter(Boolean);   // bỏ các dòng trống
   if (!dong.length) return { loi: "Ma trận đang trống. Mỗi dòng là 1 hàng, các số cách nhau bởi dấu cách." };
@@ -46,7 +31,6 @@ function docChuMaTran(chu) {
 const chuMaTran = mt => mt.map(h => h.join(" ")).join("\n");
 const doiXungMT = mt => mt.every((h, i) => h.every((x, j) => i === j || x === mt[j][i]));
 
-/* ---------- 1. HTML của ô ma trận (main.js gọi trong renderInput) ---------- */
 function oMaTranHTML(inp) {
   const goiY = inp.hint ? `<small class="hint">${inp.hint}</small>` : "";
   return `
@@ -74,7 +58,6 @@ function oMaTranHTML(inp) {
     </div>`;
 }
 
-/* ---------- 2. Gắn sự kiện (main.js gọi sau khi vẽ form) ---------- */
 function ganOMaTran(algo) {
   document.querySelectorAll("#inputForm .o-ma-tran").forEach(khung => {
     const inp = algo.inputs.find(x => x.key === khung.dataset.key);
@@ -83,14 +66,12 @@ function ganOMaTran(algo) {
     khung._omt = st;
     const $ = sel => khung.querySelector(sel);
 
-    // Báo lỗi bằng khung lỗi chung của form. Dùng setTimeout vì form.oninput (main.js) sẽ xóa lỗi cũ ngay sau đó
     const baoLoi = (loi, oSai) => setTimeout(() => {
       baoLoiNhap(loi ? { key: inp.key, loi } : null);
       khung.querySelectorAll(".omt-o.sai").forEach(o => o.classList.remove("sai"));
       if (oSai) oSai.classList.add("sai");
     }, 0);
 
-    // Ghi bảng xuống textarea rồi báo cho form biết dữ liệu đã đổi (để xóa mô phỏng cũ...)
     function ghiXuong() {
       oChu.value = chuMaTran(st.mt);
       khung.closest("form").dispatchEvent(new Event("input", { bubbles: true }));
@@ -133,7 +114,6 @@ function ganOMaTran(algo) {
       if (chu) oChu.rows = Math.min(14, Math.max(4, (st.mt?.length || 4) + 1));
     }
 
-    // Đọc lại từ textarea (lúc mở trang, chọn ví dụ, mở lại lịch sử...)
     st.napLai = function () {
       const kq = docChuMaTran(oChu.value);
       if (kq.mt && kq.mt.length <= OMT_N_MAX) {
@@ -142,14 +122,13 @@ function ganOMaTran(algo) {
         chuyenCheDo(false);
         veLuoi();
       } else {
-        // Ma trận sai hoặc quá lớn cho bảng -> hiện dạng chữ để người dùng sửa
         if (!st.mt) st.mt = [[0, 0], [0, 0]];
         chuyenCheDo(true);
       }
       veXemTruoc();
     };
 
-    /* --- Gõ vào 1 ô của bảng --- */
+    // Gõ vào 1 ô của bảng
     khung.addEventListener("input", ev => {
       const o = ev.target;
       if (o === oChu) {                                          // đang ở dạng chữ
@@ -181,7 +160,6 @@ function ganOMaTran(algo) {
         if (doiDien) { doiDien.value = sach === "" ? "0" : sach; doiDien.classList.toggle("co", so > 0); }
       }
       ghiXuong();
-      // Lỗi của ô này được giữ lại tới khi rời khỏi ô, để gõ "-5" thì vẫn thấy cảnh báo dù ô chỉ còn số 5
       if (loi) st.loiO = { o, loi };
       if (st.loiO && st.loiO.o === o) baoLoi(st.loiO.loi, o);
       else { st.loiO = null; baoLoi(null); }
@@ -229,7 +207,7 @@ function ganOMaTran(algo) {
       baoLoi(null);
     });
 
-    /* --- Các nút --- */
+    // Các nút
     khung.addEventListener("click", ev => {
       const nut = ev.target.closest("[data-omt]");
       if (!nut || nut.tagName === "INPUT") return;
@@ -278,16 +256,10 @@ function ganOMaTran(algo) {
   });
 }
 
-// Chọn ví dụ / mở lại lịch sử -> textarea đổi giá trị -> vẽ lại bảng
 function dongBoOMaTran() {
   document.querySelectorAll("#inputForm .o-ma-tran").forEach(k => k._omt?.napLai());
 }
 
-/* Ma trận ngẫu nhiên, luôn đối xứng.
-   kieu "01"     : ma trận kề 0/1 (BFS, DFS)
-   kieu "trongSo": có trọng số 1..max, thưa (Dijkstra)
-   kieu "dayDu"  : mọi cặp đều có đường, chi phí 1..max (TSP)
-   Với "01" và "trongSo": nối sẵn 1 cây khung ngẫu nhiên để đồ thị liên thông, rồi thêm vài cạnh. */
 function maTranNgauNhien(n, { kieu, max = 20 }) {
   const mt = Array.from({ length: n }, () => Array(n).fill(0));
   const giaTri = () => (kieu === "01" ? 1 : 1 + Math.floor(Math.random() * max));

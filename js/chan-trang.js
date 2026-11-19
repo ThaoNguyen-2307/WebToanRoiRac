@@ -1,10 +1,3 @@
-/* =========================================================
-   chan-trang.js — THÔNG TIN ĐỒ ÁN + CHÂN TRANG (FOOTER)
-   Dùng cho index.html và tai-khoan.html: chỉ cần có <footer id="siteFooter"></footer>.
-   Muốn sửa tên, MSSV, lớp... chỉ cần sửa THONG_TIN_DO_AN ở dưới.
-   Ô nào để trống ("") thì không hiện ra.
-   ========================================================= */
-
 const THONG_TIN_DO_AN = {
   deTai: "Xây dựng ứng dụng Web hỗ trợ học và mô phỏng các thuật toán trong toán rời rạc",
   hocPhan: "Đồ án cơ sở ngành",
@@ -22,7 +15,6 @@ function veChanTrang() {
   const chan = document.getElementById("siteFooter");
   if (!chan) return;
   const T = THONG_TIN_DO_AN;
-  // Trang khách (index.html) dùng đường dẫn "#/...", các trang khác phải về index.html trước
   const goc = document.getElementById("app") ? "" : "index.html";
   const coThuatToan = typeof GROUPS !== "undefined" && typeof ALGORITHMS !== "undefined";
 
@@ -53,9 +45,6 @@ function veChanTrang() {
 
 veChanTrang();
 
-/* Bấm logo (trên thanh tiêu đề hoặc ở chân trang):
-   - đang ở trang khác -> về trang chủ như bình thường
-   - đang ở ngay trang chủ (địa chỉ không đổi nên trang không tự vẽ lại) -> cuộn mượt lên đầu trang */
 document.addEventListener("click", ev => {
   const logo = ev.target.closest("a.logo");
   if (!logo || !document.getElementById("app")) return;          // chỉ xử lý trên trang khách index.html

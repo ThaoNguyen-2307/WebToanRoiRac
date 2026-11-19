@@ -1,15 +1,3 @@
-/* =========================================================
-   do-thi.js — CÁC HÀM DÙNG CHUNG CHO BÀI TOÁN TRÊN ĐỒ THỊ / MA TRẬN
-   Dùng cho: tsp.js (người du lịch), bfsdfs.js (BFS, DFS), dijkstra.js
-   Phải nạp file này TRƯỚC các file trên.
-
-   - docMaTran(mt)        : kiểm tra ma trận người dùng nhập (vuông, là số, không âm)
-   - kiemTraDinh(v, n)    : kiểm tra số thứ tự đỉnh nằm trong 1..n
-   - laDoiXung(mt)        : ma trận đối xứng -> đồ thị vô hướng
-   - veDoThi({...})       : vẽ đồ thị bằng SVG (các đỉnh xếp trên một vòng tròn)
-   ========================================================= */
-
-// Ma trận do readInputs() đọc sẵn thành mảng 2 chiều các số. Ô có chữ sẽ thành NaN
 function docMaTran(mt, key = "matrix") {
   if (!Array.isArray(mt) || !mt.length || (mt.length === 1 && mt[0].length === 1 && !mt[0][0]))
     loiDuLieu(key, "Hãy nhập ma trận: mỗi dòng là 1 hàng, các số cách nhau bởi dấu cách.");
@@ -34,10 +22,8 @@ function kiemTraDinh(v, n, key, ten) {
 
 const laDoiXung = mt => mt.every((hang, i) => hang.every((x, j) => x === mt[j][i]));
 
-// Danh sách đỉnh kề với u (có cạnh u -> v, bỏ qua đường chéo), xếp tăng dần
 const dinhKe = (mt, u) => mt[u].map((w, v) => v).filter(v => v !== u && mt[u][v] > 0);
 
-// Tọa độ các đỉnh: xếp đều trên vòng tròn, đỉnh 1 ở trên cùng, đi theo chiều kim đồng hồ
 function viTriDinh(n, W, H, R) {
   return Array.from({ length: n }, (_, i) => {
     const goc = -Math.PI / 2 + (2 * Math.PI * i) / n;
@@ -45,19 +31,10 @@ function viTriDinh(n, W, H, R) {
   });
 }
 
-/* Vẽ đồ thị.
-   n, mt        : số đỉnh, ma trận
-   coHuong      : true = vẽ mũi tên (ma trận không đối xứng)
-   lopDinh(i)   : class CSS của đỉnh i (VD "hien-tai", "da-tham")
-   phuDinh(i)   : chữ nhỏ dưới đỉnh (VD giá trị d[i])
-   lopCanh(u,v) : class CSS của cạnh u-v ("" = cạnh thường)
-   nhanCanh     : true = ghi trọng số trên cạnh
-   chiCanhTo    : true = chỉ vẽ các cạnh có class (dùng cho đồ thị đầy đủ quá nhiều cạnh)          */
 function veDoThi({ n, mt, coHuong, lopDinh = () => "", phuDinh = () => "", lopCanh = () => "", nhanCanh = true, chiCanhTo = false }) {
   const W = 420, H = n <= 6 ? 300 : 360, R = Math.min(W, H) / 2 - 42, r = n <= 10 ? 17 : 13;
   const p = viTriDinh(n, W, H, R);
 
-  // Đường nối u -> v, lùi vào để không đè lên hình tròn. cong != 0: uốn cong (khi có cả 2 chiều)
   function duong(u, v, cong) {
     const dx = p[v].x - p[u].x, dy = p[v].y - p[u].y, L = Math.hypot(dx, dy);
     const ux = dx / L, uy = dy / L, nx = -uy, ny = ux;

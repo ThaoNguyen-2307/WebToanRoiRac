@@ -1,32 +1,8 @@
-/* =========================================================
-   tsp.js — BÀI TOÁN NGƯỜI DU LỊCH (TSP)
-   Có n thành phố, c[i][j] là chi phí đi từ i đến j. Xuất phát từ 1 thành phố,
-   đi qua mọi thành phố đúng 1 lần rồi quay về, sao cho tổng chi phí nhỏ nhất.
-
-   3 cách giải (ô "Cách giải"):
-   - Nhánh cận      : quay lui + cận dưới g = S + (số cạnh còn lại) × cmin, g ≥ kỷ lục thì cắt nhánh
-   - Vét cạn        : quay lui thử hết mọi hành trình (không cắt nhánh) -> để so sánh
-   - Láng giềng gần nhất (tham lam): luôn đi tới thành phố gần nhất chưa đi -> nhanh nhưng không chắc tối ưu
-
-   Mã giả nhánh cận (data.js, đánh số từ 0):
-     0 Try(i):
-     1   for j chưa đi:
-     2     x[i] = j; S += c[x[i-1]][j]
-     3     if i == n:
-     4       T = S + c[j][x[1]]
-     5       if T < kyLuc: lưu kỷ lục
-     6     else: g = S + (n-i+1)*cmin
-     7       if g < kyLuc: Try(i + 1)
-     8       else: cắt nhánh
-     9     S -= c[x[i-1]][j] //quay lui
-   ========================================================= */
-
 const TSP_NHANH_CAN = "Nhánh cận";
 const TSP_VET_CAN = "Vét cạn (quay lui, không cắt nhánh)";
 const TSP_THAM_LAM = "Láng giềng gần nhất (tham lam)";
 const TSP_SO_NUT_VE = 90;          // cây tìm kiếm nhiều nút hơn thì không vẽ
 
-// Chi phí nhỏ nhất thật sự (quy hoạch động trên tập con, chỉ dùng để so sánh với cách tham lam)
 function tspToiUu(mt, s) {
   const n = mt.length;
   if (n > 13) return null;
@@ -48,7 +24,7 @@ function tspToiUu(mt, s) {
 
 const tenHanhTrinh = x => x.map(c => c + 1).join(" → ");
 
-/* ---------- 1. HÀM GIẢI ---------- */
+// Hàm giải
 SOLVERS.tsp = function (input) {
   const mt = docMaTran(input.matrix);
   const n = mt.length;
@@ -59,7 +35,6 @@ SOLVERS.tsp = function (input) {
   const nhanhCan = input.mode !== TSP_VET_CAN;
   const rutGon = input.cheDo === "Chỉ các nút trên cây tìm kiếm";
 
-  // cmin = chi phí nhỏ nhất giữa 2 thành phố khác nhau (dùng để tính cận dưới)
   let cmin = Infinity;
   mt.forEach((hang, i) => hang.forEach((c, j) => { if (i !== j && c > 0) cmin = Math.min(cmin, c); }));
   if (cmin === Infinity) loiDuLieu("matrix", "Ma trận toàn số 0: không có đường đi nào giữa các thành phố.");
@@ -155,8 +130,6 @@ SOLVERS.tsp = function (input) {
   return steps;
 };
 
-/* Tham lam: đang ở u thì đi tới thành phố gần nhất chưa đi.
-   Mã giả: 0 u = x[1] = xuất phát | 1 for i = 2..n | 2 j = gần u nhất | 3 x[i] = j; S += c[u][j]; u = j | 4 S += c[u][x[1]] | 5 return S */
 function tspThamLam(mt, s) {
   const n = mt.length;
   const steps = [];
@@ -195,7 +168,7 @@ function tspThamLam(mt, s) {
   return steps;
 }
 
-/* ---------- 2. HÀM VẼ ---------- */
+// Hàm vẽ
 VE.tsp = function (step) {
   const s = step.state;
   const { n, mt } = s;
@@ -282,7 +255,7 @@ VE.tsp = function (step) {
     ${cayHTML}`;
 };
 
-/* ---------- 3. LÝ THUYẾT ---------- */
+// Lý thuyết
 ALGORITHMS.find(a => a.id === "tsp").lyThuyet = `
   <p><b>Bài toán (slide):</b> có n thành phố 1, 2, ..., n. Người du lịch xuất phát từ một thành phố, muốn đi thăm tất cả
      các thành phố, mỗi thành phố đúng một lần, rồi quay về thành phố xuất phát. Biết c[i][j] là chi phí đi từ i đến j.

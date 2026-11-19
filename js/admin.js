@@ -1,11 +1,3 @@
-/* =========================================================
-   admin.js — TRANG QUẢN TRỊ (chỉ tài khoản admin)
-   3 trang, chọn theo <body data-page="...">:
-     tong-quan  -> thống kê
-     tai-khoan  -> quản lý tài khoản (đổi vai trò, khóa / mở khóa)
-     vi-du      -> quản lý ví dụ có sẵn của từng thuật toán
-   ALGORITHMS lấy từ js/data.js (nạp trước file này)
-   ========================================================= */
 import { db, yeuCauAdmin, veThanhNguoiDung, e, anhDaiDien, ngayGio,
          tenCachDangNhap, loiTiengViet, thongBao } from "./firebase.js";
 import { collection, collectionGroup, getDocs, doc, updateDoc, addDoc, deleteDoc,
@@ -40,9 +32,7 @@ function veMenu() {
 
 const tenThuatToan = id => ALGORITHMS.find(a => a.id === id)?.name || id;
 
-/* =========================================================
-   1. TỔNG QUAN
-   ========================================================= */
+// Tổng quan
 async function trangTongQuan() {
   main.innerHTML = `<h1>Tổng quan</h1><p class="dang-tai">Đang tải số liệu...</p>`;
   try {
@@ -111,9 +101,7 @@ function oThongKe(nhan, so) {
   return `<div class="stat"><span class="stat-num">${so}</span><span class="stat-label">${nhan}</span></div>`;
 }
 
-/* =========================================================
-   2. QUẢN LÝ TÀI KHOẢN
-   ========================================================= */
+// Quản lý tài khoản
 let dsTaiKhoan = [];
 
 async function trangTaiKhoan(admin) {
@@ -168,7 +156,6 @@ function veBangTaiKhoan(admin) {
   document.querySelectorAll("[data-vaitro]").forEach(sel => sel.onchange = () =>
     capNhatTaiKhoan(admin, sel.dataset.vaitro, { vaiTro: sel.value }, "Đã đổi vai trò."));
 
-  // Bấm vào ảnh của 1 người dùng -> đổi ảnh đại diện cho người đó
   document.querySelectorAll("[data-anh]").forEach(btn => btn.onclick = async () => {
     const u = dsTaiKhoan.find(x => x.uid === btn.dataset.anh);
     const anhMoi = await moDoiAnh(u.anh || "", u.ten);
@@ -197,10 +184,7 @@ async function capNhatTaiKhoan(admin, uid, thayDoi, loiBao) {
   veBangTaiKhoan(admin);
 }
 
-/* =========================================================
-   3. QUẢN LÝ VÍ DỤ CÓ SẴN
-   Bảng examples: { algoId, tieuDe, values: { tên ô nhập: giá trị }, ngayTao }
-   ========================================================= */
+// Quản lý ví dụ có sẵn
 const SO_VI_DU_YEU_CAU = 5;      // đề tài yêu cầu ít nhất 5 ví dụ
 let algoDangChon = ALGORITHMS[0].id;
 let dsViDu = [];
@@ -239,7 +223,6 @@ async function taiViDu() {
   }
 }
 
-// Hiện dữ liệu ví dụ bằng tên ô nhập (lấy từ data.js), bỏ các ô không dùng
 function tomTatViDu(values = {}) {
   const algo = ALGORITHMS.find(a => a.id === algoDangChon);
   return algo.inputs
@@ -277,8 +260,6 @@ function veDanhSachViDu() {
   });
 }
 
-// Form thêm / sửa: các ô nhập lấy đúng theo thuật toán trong data.js,
-// cùng cách ẩn/hiện ô (hienKhi) và cùng cách kiểm tra dữ liệu như trang mô phỏng
 function veFormViDu() {
   const algo = ALGORITHMS.find(a => a.id === algoDangChon);
   const vd = dsViDu.find(v => v.id === dangSua);
@@ -313,7 +294,6 @@ function veFormViDu() {
   const khungO = key => form.querySelector(`.field[data-key="${key}"]`);
   const dangAn = key => khungO(key).style.display === "none";
 
-  // Ô có hienKhi (VD ô m chỉ dùng cho tổ hợp): chỉ hiện khi đang chọn đúng lựa chọn
   function capNhatOHien() {
     for (const inp of algo.inputs) {
       if (inp.hienKhi) khungO(inp.key).style.display = oNhap(inp.hienKhi.key).value === inp.hienKhi.giaTri ? "" : "none";
@@ -336,7 +316,6 @@ function veFormViDu() {
     const tieuDe = form.elements.tieuDe.value.trim();
     if (!tieuDe) return baoLoi("tieuDe", "Vui lòng nhập tiêu đề.");
 
-    // 1. Lấy dữ liệu các ô đang hiện, kiểm tra ô số là số nguyên dương
     const values = {}, input = {};
     for (const inp of algo.inputs) {
       if (dangAn(inp.key)) continue;                     // ô đang ẩn thì không lưu
@@ -351,7 +330,6 @@ function veFormViDu() {
       values[inp.key] = chu;
     }
 
-    // 2. Chạy thử thuật toán để bắt các ràng buộc riêng (VD m ≤ n, dữ liệu quá lớn)
     const giai = SOLVERS[algo.id];
     if (giai) {
       try { giai(input); }

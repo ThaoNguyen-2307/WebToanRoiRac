@@ -1,20 +1,3 @@
-/* =========================================================
-   nhau.js — XẾP n QUÂN HẬU (thuật toán quay lui)
-   Mỗi hàng đặt đúng 1 quân hậu. hau[i] = cột của quân hậu ở hàng i (0 = chưa đặt).
-   Ô (i, j) an toàn khi cột j và 2 đường chéo đi qua (i, j) chưa có hậu:
-     - đường chéo "\" : các ô có cùng hiệu  i − j
-     - đường chéo "/" : các ô có cùng tổng   i + j
-
-   Mã giả (trong data.js), đánh số dòng từ 0:
-     0  Try(i):
-     1    for j = 1..n:
-     2      if cột j, 2 đường chéo trống:
-     3        đặt hậu tại (i, j)
-     4        if i == n: in lời giải
-     5        else: Try(i + 1)
-     6        gỡ hậu tại (i, j)  // quay lui
-   ========================================================= */
-
 SOLVERS.nhau = function (input) {
   const n = input.n;                  // đã kiểm tra là số nguyên dương trước khi gọi hàm
   if (n * n > GIOI_HAN_BUOC) kiemTraSoBuoc({ length: GIOI_HAN_BUOC });   // bàn cờ quá lớn
@@ -34,7 +17,6 @@ SOLVERS.nhau = function (input) {
     steps.push({ line, msg, state: { n, hau: hau.slice(1), loiGiai, soLG: loiGiai.length, ...them } });
   }
 
-  // Tìm quân hậu đang khống chế ô (i, j) để giải thích vì sao không đặt được
   function hauChan(i, j) {
     for (let r = 1; r < i; r++) {
       const c = hau[r];
@@ -86,8 +68,7 @@ SOLVERS.nhau = function (input) {
   return steps;
 };
 
-/* ---------- HÀM VẼ: bàn cờ ---------- */
-// Hình quân hậu (vương miện) có tâm tại (x, y), kích thước theo ô cờ
+// HÀM VẼ: bàn cờ
 function hinhHau(x, y, o, mau) {
   const k = o / 50;
   const p = [[-13, 10], [-16, -8], [-6, 0], [0, -14], [6, 0], [16, -8], [13, 10]]
@@ -153,7 +134,7 @@ VE.nhau = function (step) {
       : `<span class="viz-note">Chưa có lời giải. Ô tô đỏ nhạt là ô đang bị các quân hậu khống chế.</span>`}</div>`;
 };
 
-/* ---------- LÝ THUYẾT ---------- */
+// Lý thuyết
 ALGORITHMS.find(a => a.id === "nhau").lyThuyet = `
   <p><b>Bài toán:</b> đặt n quân hậu lên bàn cờ n×n sao cho không có 2 quân nào ăn được nhau,
      tức là không có 2 quân cùng hàng, cùng cột hay cùng đường chéo.</p>

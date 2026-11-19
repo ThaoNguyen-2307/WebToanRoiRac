@@ -1,19 +1,5 @@
-/* =========================================================
-   anh-dai-dien.js — HỘP THOẠI ĐỔI ẢNH ĐẠI DIỆN
-   Dùng chung cho trang Tài khoản và trang quản trị.
-
-   const ketQua = await moDoiAnh(anhHienTai, tenNguoiDung);
-     - chuỗi "data:image/jpeg;base64,..." : ảnh mới (đã cắt vuông, thu nhỏ 256×256)
-     - ""   : người dùng chọn "Xóa ảnh"
-     - null : người dùng bấm Hủy
-
-   Ảnh được lưu thẳng vào Firestore (trường "anh" của users/{uid}) dưới dạng chuỗi,
-   nên không cần bật Firebase Storage. Ảnh 256×256 chỉ khoảng 15–30 KB.
-   ========================================================= */
-
 const KICH_THUOC = 256;      // ảnh đại diện 256 × 256 điểm ảnh
 
-// Cắt giữa ảnh thành hình vuông, thu nhỏ rồi xuất ra JPEG dạng chuỗi
 function catVaThuNho(nguon, rong, cao) {
   const canh = Math.min(rong, cao);
   const canvas = document.createElement("canvas");
@@ -50,7 +36,7 @@ export function moDoiAnh(anhHienTai = "", ten = "") {
         <div class="anh-xem-truoc" id="xemTruoc"></div>
         <div class="camera" id="khungCamera" hidden>
           <video id="video" autoplay playsinline muted></video>
-          <button class="btn primary" id="nutChup" type="button">📸 Chụp</button>
+          <button class="btn primary" id="nutChup" type="button">Chụp</button>
         </div>
         <div class="alert loi" id="loiAnh" hidden></div>
 
@@ -59,7 +45,6 @@ export function moDoiAnh(anhHienTai = "", ten = "") {
           <button class="btn" id="nutCamera" type="button">Chụp ảnh</button>
           <button class="btn danger" id="nutXoaAnh" type="button">Xóa ảnh</button>
         </div>
-        <!-- Trên điện thoại, ô chọn file tự cho phép chụp bằng camera hoặc chọn từ thư viện ảnh -->
         <input type="file" id="oFile" accept="image/*" hidden>
 
         <div class="modal-chan">
@@ -92,7 +77,7 @@ export function moDoiAnh(anhHienTai = "", ten = "") {
     const phimEsc = ev => { if (ev.key === "Escape") dong(null); };
     document.addEventListener("keydown", phimEsc);
 
-    /* 1. Chọn ảnh từ máy */
+    // 1. Chọn ảnh từ máy
     $("nutChonFile").onclick = () => { tatCamera(); $("oFile").click(); };
     $("oFile").onchange = async () => {
       const file = $("oFile").files[0];
@@ -102,7 +87,7 @@ export function moDoiAnh(anhHienTai = "", ten = "") {
       $("oFile").value = "";
     };
 
-    /* 2. Chụp ảnh bằng camera của máy */
+    // 2. Chụp ảnh bằng camera của máy
     $("nutCamera").onclick = async () => {
       baoLoi("");
       if (!navigator.mediaDevices?.getUserMedia) return baoLoi("Trình duyệt này không hỗ trợ mở camera.");
@@ -124,7 +109,7 @@ export function moDoiAnh(anhHienTai = "", ten = "") {
       veXemTruoc();
     };
 
-    /* 3. Xóa ảnh -> quay về chữ cái đầu của tên */
+    // 3. Xóa ảnh -> quay về chữ cái đầu của tên
     $("nutXoaAnh").onclick = () => { tatCamera(); anhMoi = ""; veXemTruoc(); };
 
     $("nutHuy").onclick = () => dong(null);

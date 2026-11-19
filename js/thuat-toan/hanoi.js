@@ -1,23 +1,6 @@
-/* =========================================================
-   hanoi.js — THÁP HÀ NỘI
-   1. SOLVERS.hanoi : chạy thuật toán đệ quy, ghi lại từng bước
-   2. VE.hanoi      : vẽ 3 cọc, các đĩa và ngăn xếp lời gọi đệ quy
-   3. Lý thuyết     : nội dung tab "Lý thuyết"
-
-   Mã giả (trong data.js), đánh số dòng từ 0:
-     0  hanoi(n, A, B, C):
-     1    if n == 1:
-     2      chuyển đĩa A -> C; return
-     3    hanoi(n-1, A, C, B)
-     4    chuyển đĩa A -> C
-     5    hanoi(n-1, B, A, C)
-   ========================================================= */
-
 const TEN_COC = ["A", "B", "C"];
 
-/* ---------- 1. HÀM GIẢI ----------
-   Cọc được lưu bằng mảng, phần tử cuối là đĩa trên cùng.
-   VD 3 đĩa: coc = [[3, 2, 1], [], []]  (đĩa 1 nhỏ nhất, nằm trên cùng cọc A)        */
+// Hàm giải
 SOLVERS.hanoi = function (input) {
   const n = input.n;                  // đã kiểm tra là số nguyên dương trước khi gọi hàm
   if (2 ** n > GIOI_HAN_BUOC) kiemTraSoBuoc({ length: GIOI_HAN_BUOC });   // báo trước, khỏi chạy
@@ -53,7 +36,6 @@ SOLVERS.hanoi = function (input) {
             { tu, den, dia });
   }
 
-  // Thuật toán đệ quy: chuyển k đĩa từ cọc a sang cọc c, dùng cọc b làm trung gian
   function hanoi(k, a, b, c) {
     const A = TEN_COC[a], B = TEN_COC[b], C = TEN_COC[c];
     nganXep.push(`hanoi(${k}, ${A}, ${B}, ${C})`);
@@ -79,7 +61,7 @@ SOLVERS.hanoi = function (input) {
   return steps;
 };
 
-/* ---------- 2. HÀM VẼ ---------- */
+// Hàm vẽ
 const MAU_DIA = ["#e8a33d", "#d9694f", "#b35c8a", "#6f6bb8", "#4f8fc0", "#4fa38a", "#8aa04f"];
 
 VE.hanoi = function (step) {
@@ -138,7 +120,7 @@ VE.hanoi = function (step) {
     </div>`;
 };
 
-/* ---------- 3. LÝ THUYẾT ---------- */
+// Lý thuyết
 ALGORITHMS.find(a => a.id === "hanoi").lyThuyet = `
   <p><b>Bài toán:</b> có 3 cọc A, B, C. Cọc A có n đĩa, đĩa to ở dưới, đĩa nhỏ ở trên.
      Hãy chuyển hết sang cọc C với 2 luật: mỗi lần chỉ chuyển 1 đĩa (đĩa trên cùng)

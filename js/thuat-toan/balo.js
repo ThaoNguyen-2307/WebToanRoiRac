@@ -1,26 +1,3 @@
-/* =========================================================
-   balo.js — XẾP BA LÔ (CÁI TÚI) BẰNG QUY HOẠCH ĐỘNG
-   Theo slide: ba lô mang được tối đa trọng lượng b, có n đồ vật,
-   vật i nặng a[i] và có giá trị c[i]. Chọn vật để tổng giá trị lớn nhất.
-     - Ba lô 1: mỗi vật lấy tối đa 1 lần (x[i] = 0 hoặc 1)
-     - Ba lô 2: mỗi vật lấy từ 0 đến m lần
-
-   F[i][w] = giá trị lớn nhất khi chỉ dùng các vật 1..i và ba lô chứa tối đa w.
-
-   Mã giả (data.js, đánh số từ 0):
-     0 for i = 1..n:
-     1   for w = 0..b:
-     2     F[i][w] = F[i-1][w]            (không lấy / lấy 0 cái vật i)
-     3     if a[i] <= w:   | for k = 1..m, k*a[i] <= w:
-     4       lay = ...
-     5       F[i][w] = max(F[i][w], lay)
-     6 w = b   (truy vết)
-     7 for i = n..1:
-     8   ...
-     9   ...
-    10 return F[n][b]
-   ========================================================= */
-
 const BALO_2 = "Ba lô 2 (mỗi vật lấy tối đa m lần)";
 
 // "3, 4, 5" -> [3, 4, 5]. Sai thì báo lỗi dưới đúng ô nhập
@@ -35,7 +12,7 @@ function docDanhSach(chuoi, key, ten) {
   });
 }
 
-/* ---------- 1. HÀM GIẢI ---------- */
+// Hàm giải
 SOLVERS.balo = function (input) {
   const b = input.b;
   const a = docDanhSach(input.a, "a", "Trọng lượng");
@@ -52,15 +29,10 @@ SOLVERS.balo = function (input) {
   if (uocLuong > GIOI_HAN_BUOC)
     loiDuLieu("b", `Dữ liệu quá lớn: bảng ${n + 1} × ${b + 1} ô cần khoảng ${uocLuong.toLocaleString("vi-VN")} bước mô phỏng. Hãy giảm b hoặc số đồ vật.`);
 
-  // F[0][w] = 0: chưa có vật nào thì giá trị bằng 0. K[i][w] = số cái vật i lấy ở ô đó (để truy vết)
   const F = [Array(b + 1).fill(0)];
   const K = [Array(b + 1).fill(0)];
   for (let i = 1; i <= n; i++) { F.push(Array(b + 1).fill(null)); K.push(Array(b + 1).fill(0)); }
 
-  /* Không chép cả bảng vào từng bước (bảng lớn sẽ tốn bộ nhớ). Mỗi bước chỉ ghi:
-     - tienDo: thứ tự ô đang tính (ô i,w có thứ tự i*(b+1)+w). Ô đứng trước đã điền xong, ô sau còn trống
-     - giaTriO: giá trị tạm thời của ô đang tính
-     Hàm vẽ đọc giá trị cuối cùng từ bảng F dùng chung.                                           */
   const steps = [];
   let tienDo = b + 1, giaTriO = null;
   function ghi(line, msg, them = {}, batBuoc = false) {
@@ -118,7 +90,6 @@ SOLVERS.balo = function (input) {
     }
   }
 
-  // Truy vết: đi ngược từ ô F[n][b] để biết đã chọn những vật nào
   tienDo = Infinity;
   let w = b;
   const x = Array(n + 1).fill(0);
@@ -150,13 +121,12 @@ SOLVERS.balo = function (input) {
   return steps;
 };
 
-/* ---------- 2. HÀM VẼ: bảng F + danh sách đồ vật ---------- */
+// HÀM VẼ: bảng F + danh sách đồ vật
 VE.balo = function (step) {
   const s = step.state;
   const laNguon = new Set((s.nguon || []).map(([i, w]) => i + "," + w));
   const tren = new Set((s.duong || []).map(([i, w]) => i + "," + w));
 
-  // Giá trị ô (i, w) ở bước này: ô đã qua lấy giá trị cuối, ô đang tính lấy giá trị tạm, ô sau để trống
   const giaTri = (i, w) => {
     const thuTu = i * (s.b + 1) + w;
     return i === 0 || thuTu < s.tienDo ? s.F[i][w] : thuTu === s.tienDo ? s.giaTriO : null;
@@ -206,7 +176,7 @@ VE.balo = function (step) {
     <p class="viz-note">${s.truyVet ? "Ô xanh đậm: đường truy vết từ F[n][b] ngược về hàng 0." : "Ô vàng: ô đang tính. Ô xanh: các ô ở hàng trên được dùng để tính."}</p>`;
 };
 
-/* ---------- 3. LÝ THUYẾT ---------- */
+// Lý thuyết
 ALGORITHMS.find(a => a.id === "balo").lyThuyet = `
   <p><b>Bài toán (slide):</b> có 1 chiếc ba lô mang được không quá trọng lượng b. Có n đồ vật, vật i có trọng lượng
      aᵢ và giá trị cᵢ. Chọn những vật nào để tổng giá trị lớn nhất?</p>

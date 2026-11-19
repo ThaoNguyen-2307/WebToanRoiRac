@@ -1,8 +1,3 @@
-/* =========================================================
-   data.js — DỮ LIỆU các thuật toán
-   Muốn thêm thuật toán mới: chỉ cần thêm 1 object vào ALGORITHMS.
-   ========================================================= */
-
 // Các nhóm kỹ thuật (theo slide của thầy)
 const GROUPS = [
   { id: "quaylui",  name: "Quay lui",        icon: "↩" },
@@ -11,12 +6,6 @@ const GROUPS = [
   { id: "dothi",    name: "Đồ thị",          icon: "◉" }
 ];
 
-/* Mỗi thuật toán gồm:
-   - id, name, group, short: thông tin hiển thị
-   - inputs: các ô nhập liệu (type: number | select | text | matrix)
-   - pseudo: mã giả (mỗi phần tử là 1 dòng)
-   - complexity: độ phức tạp
-*/
 const ALGORITHMS = [
   {
     id: "lietke",
@@ -28,7 +17,6 @@ const ALGORITHMS = [
         options: ["Dãy nhị phân n bit", "Hoán vị của n phần tử", "Tổ hợp chập m của n"] },
       { key: "n", label: "n", type: "number", value: 3,
         hint: "Nên chọn n nhỏ để dễ theo dõi (hoán vị nên ≤ 5); n càng lớn số bước tăng rất nhanh." },
-      // hienKhi: ô m chỉ hiện khi ô "type" đang chọn "Tổ hợp chập m của n"
       { key: "m", label: "m", type: "number", value: 2, hint: "Cần m ≤ n.",
         hienKhi: { key: "type", giaTri: "Tổ hợp chập m của n" } },
       { key: "cheDo", label: "Hiển thị", type: "select",
@@ -44,7 +32,6 @@ const ALGORITHMS = [
       "      bỏ ghi nhận j  // quay lui"
     ],
     complexity: "Nhị phân O(2ⁿ), hoán vị O(n!)",
-    // Mã giả cụ thể cho từng dạng (theo ô "type"). Giữ đủ 7 dòng, cùng thứ tự với mã giả chung ở trên.
     maGiaTheo: {
       key: "type",
       "Dãy nhị phân n bit": [
@@ -362,26 +349,16 @@ const ALGORITHMS = [
   }
 ];
 
-/* =========================================================
-   CHỖ ĐĂNG KÝ THUẬT TOÁN (dùng chung)
-   SOLVERS[id](input) -> mảng các bước: { line, msg, state }
-     line : số thứ tự dòng mã giả cần tô sáng (bắt đầu từ 0)
-     msg  : lời giải thích của bước đó
-     state: dữ liệu để vẽ hình ở bước đó
-   VE[id](step) -> chuỗi HTML vẽ trạng thái của 1 bước
-   Mỗi thuật toán viết trong 1 file riêng ở js/thuat-toan/ (VD: hanoi.js)
-   ========================================================= */
+// Chỗ đăng ký thuật toán
 const SOLVERS = {};
 const VE = {};
 
-// Hàm giải gọi loiDuLieu(...) khi dữ liệu sai ràng buộc riêng, web sẽ hiện thông báo dưới ô nhập
 function loiDuLieu(key, thongBao) {
   const e = new Error(thongBao);
   e.key = key;
   throw e;
 }
 
-// Số bước mô phỏng tối đa. Vượt quá sẽ báo "dữ liệu quá lớn" thay vì làm treo trình duyệt
 const GIOI_HAN_BUOC = 100000;
 function kiemTraSoBuoc(steps) {
   if (steps.length >= GIOI_HAN_BUOC)

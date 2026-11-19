@@ -1,10 +1,3 @@
-/* =========================================================
-   minh-hoa.js — HÌNH MINH HỌA (vẽ bằng SVG, không cần file ảnh)
-   - NAV_ICONS: biểu tượng của 4 nhóm trên thanh menu
-   - MINH_HOA: màu nền + hình của từng thuật toán (thẻ ở trang chủ)
-   Muốn đổi màu thẻ: sửa giá trị "mau".
-   ========================================================= */
-
 const NAV_ICONS = {
   // Quay lui: mũi tên quay ngược
   quaylui: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -25,7 +18,6 @@ const NAV_ICONS = {
 const VANG = "#ffd43b";
 
 const MINH_HOA = {
-  /* Cây liệt kê nhị phân: đường đang thử tô vàng, nhánh chưa đi mờ đi */
   lietke: { mau: "#3d4a63", svg: `
     <g stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".3">
       <line x1="100" y1="42" x2="145" y2="98"/><line x1="145" y1="98" x2="125" y2="155"/>
@@ -38,7 +30,7 @@ const MINH_HOA = {
     <g font-family="Arial,sans-serif" font-weight="700" font-size="14" text-anchor="middle" fill="#3d4a63">
       <text x="55" y="103">0</text><text x="78" y="160">01</text></g>` },
 
-  /* Bàn cờ 4×4 với 4 quân hậu không ăn nhau */
+  // Bàn cờ 4×4 với 4 quân hậu không ăn nhau
   nhau: { mau: "#a35d4f", svg: `
     ${[0, 1, 2, 3].map(r => [0, 1, 2, 3].map(c =>
       `<rect x="${30 + c * 35}" y="${30 + r * 35}" width="35" height="35" fill="${(r + c) % 2 ? "#ecd3c9" : "#fff"}"/>`).join("")).join("")}
@@ -48,7 +40,7 @@ const MINH_HOA = {
     }).join("")}
     <rect x="30" y="30" width="140" height="140" fill="none" stroke="#3a1a12" stroke-width="3"/>` },
 
-  /* Tháp Hà Nội: 3 cọc, 1 đĩa đang được nhấc lên */
+  // Tháp Hà Nội: 3 cọc, 1 đĩa đang được nhấc lên
   hanoi: { mau: "#6f9a8d", svg: `
     <g fill="#f1f7f4" opacity=".9"><rect x="47" y="70" width="6" height="95"/><rect x="97" y="70" width="6" height="95"/>
       <rect x="147" y="70" width="6" height="95"/><rect x="18" y="163" width="164" height="9" rx="4"/></g>
@@ -58,7 +50,7 @@ const MINH_HOA = {
     <rect x="90" y="40" width="20" height="14" rx="7" fill="${VANG}"/>
     <path d="M150 140 Q150 47 116 47" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="6 6"/>` },
 
-  /* Cây gọi đệ quy Fibonacci: các lời gọi bị lặp tô vàng */
+  // Cây gọi đệ quy Fibonacci: các lời gọi bị lặp tô vàng
   fibonacci: { mau: "#7f9a72", svg: `
     <g stroke="#fff" stroke-width="3.5" opacity=".75">
       <line x1="100" y1="35" x2="58" y2="85"/><line x1="100" y1="35" x2="142" y2="85"/>
@@ -70,7 +62,7 @@ const MINH_HOA = {
       `<circle cx="${x}" cy="${y}" r="15" fill="${lap ? VANG : "#fff"}"/>
        <text x="${x}" y="${y + 5}" font-family="Arial,sans-serif" font-weight="700" font-size="14" text-anchor="middle" fill="#3d5236">${n}</text>`).join("")}` },
 
-  /* Bảng quy hoạch động của bài ba lô: điền dần từng ô */
+  // Bảng quy hoạch động của bài ba lô: điền dần từng ô
   balo: { mau: "#5b7a99", svg: `
     ${[0, 1, 2, 3, 4].map(r => [0, 1, 2, 3, 4].map(c => {
       const daDien = r < 3 || (r === 3 && c < 2), dangXet = r === 3 && c === 2;
@@ -80,7 +72,7 @@ const MINH_HOA = {
     <g stroke="#1f2f44" stroke-width="3" stroke-linecap="round" fill="none">
       <path d="M99.5 101v12"/><path d="M73 98l17 17"/></g>` },
 
-  /* Người du lịch: các thành phố và một hành trình khép kín */
+  // Người du lịch: các thành phố và một hành trình khép kín
   tsp: { mau: "#c98b4a", svg: `
     <polygon points="45,62 112,36 166,82 150,156 80,166 36,120" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
     <g stroke="#fff" stroke-width="2" stroke-dasharray="5 6" opacity=".55"><line x1="45" y1="62" x2="150" y2="156"/><line x1="112" y1="36" x2="80" y2="166"/></g>
@@ -88,7 +80,7 @@ const MINH_HOA = {
       `<circle cx="${x}" cy="${y}" r="10" fill="#4a2f12" stroke="#fff" stroke-width="3"/>`).join("")}
     <circle cx="45" cy="62" r="12" fill="${VANG}" stroke="#fff" stroke-width="3"/>` },
 
-  /* BFS: duyệt theo từng lớp, đỉnh đã thăm tô vàng */
+  // BFS: duyệt theo từng lớp, đỉnh đã thăm tô vàng
   bfsdfs: { mau: "#7d6b91", svg: `
     <circle cx="100" cy="45" r="70" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="4 7" opacity=".4"/>
     <g stroke="#fff" stroke-width="3.5" opacity=".8">
@@ -98,7 +90,7 @@ const MINH_HOA = {
     <circle cx="100" cy="45" r="14" fill="${VANG}"/><circle cx="55" cy="100" r="14" fill="${VANG}"/><circle cx="145" cy="100" r="14" fill="${VANG}"/>
     ${[35, 85, 125, 168].map(x => `<circle cx="${x}" cy="158" r="14" fill="#fff" opacity=".9"/>`).join("")}` },
 
-  /* Dijkstra: đồ thị có trọng số, đường ngắn nhất tô vàng */
+  // Dijkstra: đồ thị có trọng số, đường ngắn nhất tô vàng
   dijkstra: { mau: "#2a3242", svg: `
     <g stroke="#fff" stroke-width="3" opacity=".3">
       <line x1="35" y1="100" x2="92" y2="45"/><line x1="92" y1="45" x2="155" y2="58"/>

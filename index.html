@@ -14,9 +14,7 @@
       <span class="logo-mark">∑</span>
       <span>Toán Rời Rạc <small>Mô phỏng thuật toán</small></span>
     </a>
-    <!-- Menu ngang: Quay lui / Quy hoạch động / Nhánh cận / Đồ thị (được tạo bằng JS) -->
     <nav class="topnav" id="topnav"></nav>
-    <!-- Nút Đăng nhập / Đăng ký hoặc tên người dùng (tạo bằng js/firebase.js) -->
     <div class="user-area" id="userArea">
       <a class="btn" href="dang-nhap.html">Đăng nhập</a>
       <a class="btn primary" href="dang-nhap.html#dang-ky">Đăng ký</a>
@@ -24,21 +22,17 @@
   </header>
 
   <div class="layout">
-    <!-- ===== MENU BÊN TRÁI: danh sách thuật toán (được tạo bằng JS) ===== -->
     <nav class="sidebar" id="sidebar"></nav>
 
-    <!-- ===== NỘI DUNG CHÍNH: trang chủ hoặc trang thuật toán (được tạo bằng JS) ===== -->
     <main class="content" id="app"></main>
   </div>
 
   <!-- ===== CHÂN TRANG (được tạo bằng js/chan-trang.js) ===== -->
   <footer class="site-footer" id="siteFooter"></footer>
 
-  <!-- Thứ tự quan trọng: data.js (dữ liệu) phải nạp trước main.js (xử lý) -->
   <script src="js/data.js"></script>
   <script src="js/minh-hoa.js"></script>
   <script src="js/chan-trang.js"></script>  <!-- thông tin đồ án + chân trang -->
-  <!-- Mỗi thuật toán 1 file: hàm giải (SOLVERS) + hàm vẽ (VE). Nạp sau data.js, trước main.js -->
   <script src="js/thuat-toan/lietke.js"></script>
   <script src="js/thuat-toan/nhau.js"></script>
   <script src="js/thuat-toan/hanoi.js"></script>
@@ -53,7 +47,6 @@
   <script src="js/so-sanh.js"></script>     <!-- So sánh các cách giải -->
   <script src="js/de-bai.js"></script>      <!-- Đề bài tự sinh từ dữ liệu nhập -->
   <script src="js/main.js"></script>
-  <!-- Phần đăng nhập + lưu lịch sử (Firebase). type="module" để dùng được import -->
   <script type="module" src="js/trang-khach.js"></script>
 </body>
 </html>

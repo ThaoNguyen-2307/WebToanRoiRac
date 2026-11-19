@@ -1,22 +1,9 @@
-/* =========================================================
-   main.js — XỬ LÝ giao diện
-   1. Vẽ menu bên trái
-   2. Điều hướng trang (trang chủ <-> trang thuật toán)
-   3. Vẽ trang thuật toán (nhập liệu, mô phỏng, mã giả, nhật ký)
-   4. Bộ điều khiển mô phỏng (Tiếp / Lùi / Tự chạy / Đặt lại)
-   ========================================================= */
-
 const app = document.getElementById("app");
 const sidebar = document.getElementById("sidebar");
 
-/* Phần Firebase (js/trang-khach.js) nạp sau file này. Khi sẵn sàng nó gọi __baoSanSang(App).
-   Dùng: const App = await sanSang;  App.layViDu(...), App.luuLichSu(...)
-   Nếu Firebase lỗi / chưa cấu hình, web vẫn chạy bình thường như khách.             */
 const sanSang = new Promise(resolve => { window.__baoSanSang = resolve; });
 
-/* ---------- 1. CỘT BÊN TRÁI: LỊCH SỬ MÔ PHỎNG ----------
-   Máy tính: chỉ hiện lịch sử (chọn thuật toán bằng menu ngang phía trên).
-   Điện thoại: menu ngang bị ẩn nên hiện thêm danh sách thuật toán ở cuối.     */
+// Cột bên trái: lịch sử mô phỏng
 function renderSidebar() {
   let html = `
     <a href="#/" class="nav-home">⌂ Trang chủ</a>
@@ -68,7 +55,6 @@ async function veLichSu() {
     return;
   }
 
-  // Chia nhóm theo ngày: Hôm nay / Hôm qua / 7 ngày qua / Cũ hơn
   const nhom = {};
   ds.forEach((h, i) => { (nhom[tenNgay(h.createdAt)] ||= []).push({ ...h, i }); });
 
@@ -118,7 +104,6 @@ function tomTatDuLieu(values = {}) {
   }).join(" · ");
 }
 
-// Menu ngang trên cùng: mỗi nhóm là 1 mục, rê chuột vào thì thả xuống danh sách thuật toán
 function renderTopNav() {
   document.getElementById("topnav").innerHTML = GROUPS.map(g => `
     <div class="dropdown" data-group="${g.id}">
@@ -144,12 +129,7 @@ function highlightNav(id) {
   });
 }
 
-/* ---------- 2. ĐIỀU HƯỚNG ----------
-   Dùng phần sau dấu # trên địa chỉ web:
-   #/                      -> trang chủ
-   #/algo/nhau             -> trang thuật toán n quân hậu
-   #/algo/nhau/ly-thuyet   -> trang thuật toán, mở sẵn tab Lý thuyết
-   #/huong-dan/mo-phong    -> trang hướng dẫn 1 tính năng            */
+// Điều hướng
 function router() {
   stopAutoPlay();
   const hash = location.hash || "#/";
@@ -179,93 +159,125 @@ function router() {
   window.scrollTo(0, 0);
 }
 
-/* ---------- TRANG CHỦ ---------- */
-/* Các tính năng giới thiệu ở trang chủ. Bấm vào -> trang hướng dẫn #/huong-dan/{id}
-   steps: các bước sử dụng; meo: mẹo nhỏ; thu: bài để bấm "Thử ngay" (tab: mở sẵn tab nào) */
+// Trang chủ
+// Các tính năng ở trang chủ, bấm vào thì mở trang hướng dẫn
 const FEATURES = [
   {
     id: "mo-phong", icon: "▶", title: "Mô phỏng từng bước",
     text: "Xem thuật toán chạy chậm từng bước, có thể tiến, lùi hoặc tự chạy.",
     steps: [
-      "Chọn một bài toán: bấm vào thẻ ở trang chủ hoặc chọn trên thanh menu phía trên.",
-      "Nhập dữ liệu ở cột bên trái (hoặc giữ nguyên dữ liệu mặc định).",
+      "Chọn một bài toán ở trang chủ hoặc trên thanh menu phía trên.",
+      "Đọc khung <b>Đề bài</b> ở giữa trang để biết bài toán đang hỏi gì. Đề bài tự đổi theo dữ liệu bạn nhập.",
       "Bấm <b>▶ Bắt đầu mô phỏng</b>. Hình vẽ ở giữa hiện bước đầu tiên.",
-      "Bấm <b>Tiếp ▶</b> để đi tới 1 bước, <b>◀ Lùi</b> để quay lại bước trước.",
-      "Bấm <b>▶ Tự chạy</b> để web tự đi hết các bước; kéo thanh <b>Tốc độ</b> để chạy nhanh hoặc chậm hơn. Bấm <b>⏸ Dừng</b> để tạm dừng.",
+      "Bấm <b>Tiếp ▶</b> / <b>◀ Lùi</b> để đi từng bước, hoặc <b>▶ Tự chạy</b> để web tự chạy. Kéo thanh <b>Tốc độ</b> để chạy nhanh hay chậm.",
       "Bấm <b>⟲</b> để xóa kết quả và làm lại từ đầu."
     ],
-    meo: "Ô \"Bước 3 / 15\" ở góc dưới cho biết bạn đang ở bước nào trên tổng số bước.",
+    meo: "Dùng bàn phím cho nhanh: <b>→</b> tiếp, <b>←</b> lùi, <b>Space</b> tự chạy / dừng, <b>Home</b> / <b>End</b> về bước đầu / cuối, <b>R</b> làm lại.",
     thu: { algo: "hanoi" }
   },
-
   {
     id: "ma-gia", icon: "≡", title: "Mã giả tô sáng",
     text: "Dòng mã giả đang thực hiện được tô sáng để dễ theo dõi.",
     steps: [
       "Mở một bài toán bất kỳ. Khung <b>Mã giả</b> nằm ở cột bên phải.",
-      "Bắt đầu mô phỏng. Dòng đang được thực hiện sẽ được <b>tô vàng</b>.",
-      "Mỗi lần bấm Tiếp hoặc Lùi, dòng tô vàng di chuyển theo đúng bước đó.",
+      "Với bài có nhiều dạng (VD Liệt kê: nhị phân, hoán vị, tổ hợp), mã giả tự đổi theo dạng bạn chọn.",
+      "Bắt đầu mô phỏng. Dòng đang thực hiện được <b>tô vàng</b>, đi Tiếp hay Lùi thì dòng tô vàng đi theo.",
       "Đọc khung <b>Giải thích từng bước</b> ngay bên dưới để biết ở bước đó thuật toán làm gì."
     ],
-    meo: "Vừa nhìn hình vẽ ở giữa vừa nhìn dòng tô vàng giúp bạn nối được \"code\" với \"hình\", đây là cách nhớ thuật toán nhanh nhất.",
+    meo: "Vừa nhìn hình vẽ ở giữa vừa nhìn dòng tô vàng sẽ giúp bạn nối được \"code\" với \"hình\", dễ nhớ thuật toán hơn.",
     thu: { algo: "nhau" }
   },
-
   {
     id: "nhap-du-lieu", icon: "✎", title: "Tự nhập dữ liệu",
     text: "Nhập số, danh sách hoặc ma trận của riêng bạn để web giải.",
     steps: [
-      "<b>Số</b> (ví dụ số đĩa n, kích thước bàn cờ): gõ trực tiếp vào ô.",
-      "<b>Danh sách</b> (ví dụ trọng lượng đồ vật): các số cách nhau bằng dấu phẩy, ví dụ <code>3, 4, 5, 2</code>.",
-      "<b>Ma trận</b> (đồ thị, bảng chi phí): mỗi dòng là 1 hàng, các số cách nhau bằng dấu cách. Số <code>0</code> nghĩa là không có cạnh.",
-      "Nhập xong bấm <b>▶ Bắt đầu mô phỏng</b> để web giải theo dữ liệu của bạn."
+      "<b>Số</b> (số đĩa n, kích thước bàn cờ...): gõ vào ô. Web không cho nhập số âm hay chữ cái.",
+      "<b>Danh sách</b> (trọng lượng, giá trị đồ vật): các số cách nhau bằng dấu phẩy, VD <code>3, 4, 5, 2</code>.",
+      "<b>Ma trận</b> (bài đồ thị, TSP): chỉnh <b>Số đỉnh</b> bằng nút − / +, rồi điền từng ô của bảng. Ô bỏ trống tính là 0 (không có đường).",
+      "Tích <b>Đối xứng</b> nếu đường đi 2 chiều như nhau: sửa ô (i, j) thì ô (j, i) tự đổi theo. Bấm <b>Ngẫu nhiên</b> để có dữ liệu thử nhanh.",
+      "Muốn dán ma trận chép từ chỗ khác thì bấm <b>Nhập dạng chữ</b> (mỗi dòng là 1 hàng, các số cách nhau bằng dấu cách), hoặc dán thẳng vào 1 ô của bảng.",
+      "Hình <b>Xem trước đồ thị</b> dưới bảng vẽ lại ngay khi bạn sửa, nhập xong bấm <b>▶ Bắt đầu mô phỏng</b>."
     ],
     vidu: "0 4 1 0\n4 0 2 5\n1 2 0 8\n0 5 8 0",
     meo: "Nên nhập dữ liệu nhỏ (4 đến 6 đỉnh, n ≤ 8) để hình vẽ dễ nhìn và mô phỏng không quá dài.",
     thu: { algo: "dijkstra" }
   },
-
   {
     id: "vi-du", icon: "★", title: "Ví dụ có sẵn",
     text: "Mỗi thuật toán có sẵn các bài mẫu, bấm một nút là chạy.",
     steps: [
       "Mở một bài toán, nhìn mục <b>Ví dụ có sẵn</b> ở cột bên trái.",
-      "Bấm vào tên một ví dụ: dữ liệu được điền sẵn vào các ô.",
+      "Bấm vào tên một ví dụ: dữ liệu tự điền vào các ô, khung Đề bài đổi theo.",
       "Bấm <b>▶ Bắt đầu mô phỏng</b> để chạy ví dụ đó.",
       "Bấm <b>Mặc định</b> để quay về dữ liệu ban đầu."
     ],
-    meo: "Đăng nhập để mỗi bài bạn đã chạy được lưu vào cột Lịch sử bên trái, lần sau bấm vào là mở lại ngay.",
+    meo: "Mỗi thuật toán có ít nhất 5 ví dụ lấy từ bài giảng, có cả trường hợp đặc biệt như không có lời giải, không có đường đi.",
     thu: { algo: "hanoi" }
   },
-
+  {
+    id: "bai-cua-toi", icon: "▤", title: "Lịch sử và Bài của tôi",
+    text: "Đăng nhập để lưu lại những bài đã chạy và dữ liệu tự nhập.",
+    steps: [
+      "Đăng nhập (email hoặc tài khoản Google). Mỗi lần bấm <b>Bắt đầu mô phỏng</b> sẽ được lưu vào <b>Lịch sử mô phỏng</b> ở cột trái.",
+      "Bấm vào một mục trong lịch sử để mở lại đúng dữ liệu lần đó.",
+      "Muốn giữ lại một bộ dữ liệu tự nhập (VD 1 ma trận trong slide), bấm <b>Lưu bài này</b> ở mục <b>Bài của tôi</b> rồi đặt tên.",
+      "Vào <b>Tài khoản của tôi</b> để đổi tên, xóa bài đã lưu, xóa lịch sử (tích <b>Chọn hết</b> để xóa nhiều mục một lúc)."
+    ],
+    meo: "Khách chưa đăng nhập vẫn dùng được mọi thuật toán, chỉ là không lưu lại được.",
+    thu: { algo: "tsp" }
+  },
+  {
+    id: "tu-kiem-tra", icon: "?", title: "Tự kiểm tra",
+    text: "Web dừng lại hỏi bạn bước tiếp theo trước khi hiện, để tự kiểm tra mình hiểu bài chưa.",
+    steps: [
+      "Mở một bài toán, tích ô <b>Tự kiểm tra</b> cạnh thanh tốc độ.",
+      "Bắt đầu mô phỏng và đi từng bước như bình thường. Tới bước quan trọng, web hiện câu hỏi, VD \"Đỉnh nào được thăm tiếp theo?\".",
+      "Chọn đáp án (bấm chuột hoặc phím 1 đến 4). Web tô xanh đáp án đúng, tô đỏ đáp án sai và giải thích.",
+      "Bấm <b>Tiếp tục</b> (hoặc Enter) để chạy tiếp. Số câu đúng hiện ngay cạnh ô Tự kiểm tra."
+    ],
+    meo: "Nên xem mô phỏng 1 lần trước, sau đó bật Tự kiểm tra và chạy lại với ví dụ khác để ôn.",
+    thu: { algo: "bfsdfs" }
+  },
   {
     id: "ly-thuyet", icon: "✦", title: "Lý thuyết ngắn gọn",
     text: "Ý tưởng, mã giả và độ phức tạp của từng thuật toán.",
     steps: [
       "Mở một bài toán, bấm tab <b>Lý thuyết</b> (ngay cạnh tab Mô phỏng).",
-      "Đọc phần <b>Ý tưởng</b> để hiểu thuật toán giải bài toán theo cách nào.",
-      "Xem <b>Mã giả</b> đầy đủ và <b>Độ phức tạp</b> (thuật toán chạy nhanh hay chậm khi dữ liệu lớn).",
+      "Đọc đề bài, ý tưởng, công thức và độ phức tạp của thuật toán.",
+      "Một số bài có bảng so sánh, VD bài Người du lịch có bảng so sánh quy hoạch động với nhánh cận.",
       "Quay lại tab <b>Mô phỏng</b> để xem thuật toán chạy thật."
     ],
-    meo: "Nên đọc lý thuyết trước rồi mới mô phỏng: bạn sẽ đoán trước được bước tiếp theo và hiểu sâu hơn.",
+    meo: "Nên đọc lý thuyết trước rồi mới mô phỏng, bạn sẽ đoán trước được bước tiếp theo.",
     thu: { algo: "bfsdfs", tab: "ly-thuyet" }
   },
-
   {
     id: "so-sanh", icon: "⇄", title: "So sánh kỹ thuật",
-    text: "So sánh đệ quy thường với quy hoạch động, quay lui với nhánh cận.",
+    text: "So sánh đệ quy thường với quy hoạch động, vét cạn với nhánh cận trên cùng một dữ liệu.",
     steps: [
-      "Mở bài <b>Fibonacci</b>, ở ô <b>Cách giải</b> chọn \"Đệ quy thường\" rồi mô phỏng, ghi lại số bước.",
-      "Đổi sang \"Quy hoạch động\" và mô phỏng lại với cùng n.",
-      "So sánh số bước: quy hoạch động không tính lại các giá trị đã có nên ít bước hơn hẳn.",
-      "Với bài <b>Người du lịch (TSP)</b>: các nhánh bị <b>cắt bỏ</b> (vì chắc chắn không tốt hơn kết quả đang có) được tô xám, cho thấy nhánh cận nhanh hơn quay lui thường."
+      "Mở bài <b>Fibonacci</b>, <b>Xếp ba lô</b>, <b>Người du lịch</b> hoặc <b>BFS/DFS</b>.",
+      "Nhập dữ liệu (hoặc chọn ví dụ), rồi bấm <b>So sánh các cách giải</b> dưới nút Bắt đầu mô phỏng.",
+      "Web chạy tất cả các cách giải với cùng dữ liệu và hiện bảng kết quả, biểu đồ cột và nhận xét. VD f(8): đệ quy thường gọi hàm 41 lần, quy hoạch động chỉ 13 lần.",
+      "Ở bài Người du lịch, khi mô phỏng nhánh cận, các nhánh bị cắt hiện <b>màu đỏ có dấu ✂</b> trên cây tìm kiếm."
     ],
-    meo: "Thử với n lớn dần (5, 6, 7...) để thấy khoảng cách giữa hai cách giải tăng rất nhanh.",
+    meo: "Thử tăng dần n (5, 6, 7...) rồi bấm so sánh lại để thấy khoảng cách giữa các cách giải tăng rất nhanh.",
     thu: { algo: "fibonacci" }
+  },
+  {
+    id: "phim-tat", icon: "⌘", title: "Phím tắt",
+    text: "Điều khiển mô phỏng bằng bàn phím, tiện khi thuyết trình.",
+    steps: [
+      "<b>→</b>: đi tiếp 1 bước (chưa chạy thì tự bắt đầu mô phỏng).",
+      "<b>←</b>: lùi 1 bước.",
+      "<b>Space</b>: tự chạy / dừng.",
+      "<b>Home</b> / <b>End</b>: về bước đầu / bước cuối. <b>R</b>: làm lại từ đầu.",
+      "Khi đang Tự kiểm tra: phím <b>1</b> đến <b>4</b> để chọn đáp án, <b>Enter</b> để chạy tiếp."
+    ],
+    meo: "Phím tắt không có tác dụng khi bạn đang gõ trong ô nhập liệu, nên không lo bấm nhầm.",
+    thu: { algo: "lietke" }
   }
 ];
 
-/* ---------- TRANG HƯỚNG DẪN ---------- */
+// Trang hướng dẫn
 function renderGuide(f) {
   const algo = ALGORITHMS.find(a => a.id === f.thu.algo);
   const linkThu = `#/algo/${algo.id}${f.thu.tab ? "/" + f.thu.tab : ""}`;
@@ -285,7 +297,7 @@ function renderGuide(f) {
         ${f.steps.map(s => `<li>${s}</li>`).join("")}
       </ol>
 
-      ${f.vidu ? `<div class="guide-example"><span>Ví dụ ma trận 4 đỉnh:</span><pre>${f.vidu}</pre></div>` : ""}
+      ${f.vidu ? `<div class="guide-example"><span>Ví dụ ma trận 4 đỉnh (dán vào ô "Nhập dạng chữ"):</span><pre>${f.vidu}</pre></div>` : ""}
 
       <div class="guide-tip"><b>Mẹo:</b> ${f.meo}</div>
 
@@ -299,8 +311,7 @@ function renderGuide(f) {
     </div>`;
 }
 
-/* ---------- TRANG GIỚI THIỆU ĐỒ ÁN (#/gioi-thieu) ----------
-   Thông tin sinh viên, giảng viên lấy từ THONG_TIN_DO_AN trong js/chan-trang.js */
+// Trang giới thiệu đồ án
 function renderGioiThieu() {
   const T = THONG_TIN_DO_AN;
   const dong = (nhan, giaTri) => giaTri ? `<tr><th>${nhan}</th><td>${giaTri}</td></tr>` : "";
@@ -382,7 +393,6 @@ function renderHome() {
       <div class="topic-chips" id="topicChips"></div>
     </section>
 
-    <!-- THẺ TỪNG THUẬT TOÁN: hình minh họa + tên + mô tả, bấm vào là mở trang mô phỏng -->
     <section class="algo-section">
       <h2>Học thuật toán đơn giản hơn</h2>
       <div class="algo-grid">
@@ -416,7 +426,6 @@ function renderHome() {
   });
   renderTopicChips();
 
-  // Ô tìm kiếm: gõ tới đâu gợi ý tới đó, Enter thì mở bài khớp nhất
   const input = document.getElementById("searchInput");
   input.oninput = () => renderSuggest(input.value);
   document.getElementById("searchForm").onsubmit = e => {
@@ -435,7 +444,6 @@ function renderTopicChips() {
     .map(a => `<a class="topic-chip" href="#/algo/${a.id}">${a.name}</a>`).join("");
 }
 
-// Bỏ dấu tiếng Việt để tìm "thap ha noi" vẫn ra "Tháp Hà Nội"
 function boDau(s) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
 }
@@ -459,7 +467,7 @@ function renderSuggest(text, showEmpty = false) {
   }
 }
 
-/* ---------- 3. TRANG THUẬT TOÁN ---------- */
+// Trang thuật toán
 let currentAlgo = null;
 
 function renderAlgoPage(algo) {
@@ -524,7 +532,7 @@ function renderAlgoPage(algo) {
               <input type="range" id="speed" min="1" max="5" value="3">
             </label>
             <label class="tu-kiem-tra" title="Web sẽ dừng lại hỏi bạn bước tiếp theo trước khi hiện">
-              <input type="checkbox" id="chkKiemTra">Tự kiểm tra</label>
+              <input type="checkbox" id="chkKiemTra"> Tự kiểm tra</label>
             <span class="pill diem-kt" id="diemKT" hidden></span>
             <span class="step-count" id="stepCount">Bước 0 / 0</span>
           </div>
@@ -563,7 +571,7 @@ function renderAlgoPage(algo) {
   taiBaiCuaToi(algo);
 }
 
-/* ---------- Ví dụ có sẵn (admin nhập trong trang Quản trị -> Ví dụ bài toán) ---------- */
+// Ví dụ có sẵn
 async function taiViDu(algo) {
   let ds = [];
   try {
@@ -603,7 +611,6 @@ function dienDuLieu(values = {}) {
   veDeBai();              // đề bài đổi theo dữ liệu mới
 }
 
-// Bấm "Mô phỏng lại" ở trang Tài khoản -> dữ liệu được gửi qua sessionStorage
 function napLaiTuLichSu(algo) {
   try {
     const luu = JSON.parse(sessionStorage.getItem("napLai") || "null");
@@ -616,9 +623,7 @@ function napLaiTuLichSu(algo) {
   } catch (e) { }
 }
 
-/* ---------- BÀI CỦA TÔI ----------
-   Người đã đăng nhập lưu lại dữ liệu mình tự nhập (VD 1 ma trận, 1 bài trong slide) kèm tên,
-   lần sau bấm vào tên là điền lại đúng dữ liệu đó. Lưu ở users/{uid}/baiLuu trên Firestore.  */
+// Bài của tôi
 let baiCuaToi = [];                 // danh sách bài đã lưu của thuật toán đang mở
 
 async function taiBaiCuaToi(algo) {
@@ -675,7 +680,6 @@ function ganLuuBai() {
 
   document.getElementById("btnLuuBai").onclick = () => {
     tbLuuBai("");
-    // Dữ liệu phải hợp lệ thì mới cho lưu (giống khi bấm "Bắt đầu mô phỏng")
     const loi = kiemTraDuLieu(currentAlgo);
     baoLoiNhap(loi);
     if (loi) return;
@@ -729,13 +733,11 @@ function tbLuuBai(chu, kieu = "ok") {
   k.hidden = !chu;
 }
 
-// Giá trị đang có trong form, dạng chuỗi như người dùng nhập: { type: "...", n: "4", ... }
 function giaTriForm() {
   return Object.fromEntries(currentAlgo.inputs.map(inp =>
     [inp.key, document.querySelector(`#inputForm [name="${inp.key}"]`).value]));
 }
 
-// Bỏ các ô không dùng tới (ô bị ẩn, VD ô m khi không chọn Tổ hợp) để so sánh / hiển thị
 function giaTriDangDung(algo, values = {}) {
   const kq = {};
   for (const inp of algo.inputs) {
@@ -769,9 +771,6 @@ function renderInput(inp) {
   return `<label class="field" data-key="${inp.key}"><span>${inp.label}</span>${field}${goiY}</label>`;
 }
 
-/* Mã giả theo lựa chọn: nếu thuật toán có maGiaTheo (VD bài Liệt kê có 3 dạng),
-   hiện mã giả cụ thể của dạng đang chọn; không có thì dùng mã giả chung algo.pseudo.
-   Các dạng giữ cùng số dòng nên con số "line" của từng bước vẫn tô đúng dòng.      */
 function veMaGia() {
   const khung = document.getElementById("pseudo");
   if (!khung) return;
@@ -788,7 +787,6 @@ function veMaGia() {
   if (dongDangTo != null) highlightLine(Number(dongDangTo));   // giữ dòng đang tô vàng
 }
 
-// Ẩn/hiện các ô chỉ dùng cho một lựa chọn (khai báo bằng hienKhi trong data.js)
 function capNhatOHien() {
   for (const inp of currentAlgo.inputs) {
     if (!inp.hienKhi) continue;
@@ -811,7 +809,6 @@ function bindAlgoEvents() {
   });
 
   document.getElementById("btnRun").onclick = startSimulation;
-  // Sửa dữ liệu: ẩn thông báo lỗi và xóa mô phỏng cũ (vì không còn đúng với dữ liệu mới)
   document.getElementById("inputForm").oninput = () => {
     baoLoiNhap(null);
     tbLuuBai("");
@@ -832,7 +829,6 @@ function bindAlgoEvents() {
   document.getElementById("btnPlay").onclick = toggleAutoPlay;
 }
 
-// Đọc dữ liệu người dùng nhập vào form -> object { n: 4, ... }
 function readInputs() {
   const data = {};
   for (const inp of currentAlgo.inputs) {
@@ -846,17 +842,10 @@ function readInputs() {
   return data;
 }
 
-/* ---------- 4. BỘ ĐIỀU KHIỂN MÔ PHỎNG ----------
-   Ý tưởng: thuật toán chạy 1 lần, ghi lại TẤT CẢ các bước vào mảng steps.
-   Mỗi bước có dạng: { line: số dòng mã giả, msg: lời giải thích, state: dữ liệu để vẽ }
-   Nút Tiếp/Lùi chỉ việc chuyển qua lại giữa các bước đã ghi -> lùi rất dễ.          */
+// Bộ điều khiển mô phỏng
 
 const sim = { steps: [], index: -1, timer: null };
 
-/* SOLVERS (hàm giải) và VE (hàm vẽ) được khai báo trong data.js,
-   mỗi thuật toán tự đăng ký trong file riêng ở js/thuat-toan/ (VD: hanoi.js). */
-
-// Bản mô phỏng tạm khi chưa có hàm giải: đi qua lần lượt từng dòng mã giả
 function demoSteps(algo) {
   return algo.pseudo.map((line, i) => ({
     line: i,
@@ -865,9 +854,6 @@ function demoSteps(algo) {
   }));
 }
 
-/* Kiểm tra dữ liệu nhập. Sai -> trả về { key, loi }, đúng -> null.
-   Ô số chỉ cần là số nguyên dương (không âm, không có chữ).
-   Các ràng buộc riêng (VD m ≤ n, dữ liệu quá lớn) do hàm giải tự báo bằng loiDuLieu(). */
 function kiemTraDuLieu(algo) {
   for (const inp of algo.inputs) {
     if (inp.type === "matrix") {                                 // ma trận: không chữ, không số âm, phải vuông
@@ -916,7 +902,6 @@ function startSimulation() {
   sim.deBaiGon = dongDeBai();                    // đề bài 1 dòng, hiện phía trên hình vẽ
   goToStep(0);
 
-  // Đã đăng nhập thì lưu lần mô phỏng này vào lịch sử (khách thì bỏ qua)
   const algo = currentAlgo;
   const raw = giaTriForm();
   sanSang.then(App => App.luuLichSu(algo, raw))
@@ -948,7 +933,6 @@ function goToStep(i) {
   highlightLine(step.line);
   drawState(step);
 
-  // Nhật ký: hiện các bước từ 0 đến i (lùi thì nhật ký cũng lùi theo)
   document.getElementById("log").innerHTML =
     sim.steps.slice(0, i + 1).map(s => `<li>${s.msg}</li>`).join("");
   const log = document.getElementById("log");
@@ -957,7 +941,6 @@ function goToStep(i) {
   updateStepCount();
 }
 
-// Vẽ trạng thái hiện tại lên khu vực mô phỏng (mỗi thuật toán sẽ có cách vẽ riêng)
 function drawState(step) {
   const ve = VE[currentAlgo.id];
   if (ve && step.state) {                     // thuật toán đã có hình vẽ riêng
@@ -983,7 +966,6 @@ function updateStepCount() {
   if (el) el.textContent = `Bước ${sim.index + 1} / ${sim.steps.length}`;
 }
 
-// Tự chạy: cứ sau một khoảng thời gian thì bấm "Tiếp" một lần
 function toggleAutoPlay() {
   if (sim.timer) { stopAutoPlay(); return; }
   if (sim.steps.length === 0 && !startSimulation()) return;
@@ -1012,10 +994,7 @@ function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/* ---------- PHÍM TẮT KHI MÔ PHỎNG ----------
-   →  tiếp 1 bước (chưa chạy thì bắt đầu mô phỏng)   ←  lùi 1 bước
-   Space  tự chạy / dừng      Home / End  về bước đầu / bước cuối      R  đặt lại
-   Không bắt phím khi đang gõ trong ô nhập, khi có hộp thoại mở, hoặc khi đang ở tab Lý thuyết. */
+// Phím tắt khi mô phỏng
 function xuLyPhimTat(ev) {
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;              // để yên Cmd+R, Ctrl+C...
   const tabMoPhong = document.getElementById("tab-sim");
@@ -1035,17 +1014,15 @@ function xuLyPhimTat(ev) {
   }[phim];
   if (!lenh) return;
   ev.preventDefault();                       // Space không cuộn trang, mũi tên không cuộn ngang
-  // Vừa bấm chuột vào 1 nút thì nút đó đang được chọn, Space sẽ "bấm" nút đó lần nữa -> bỏ chọn trước
   if (document.activeElement?.tagName === "BUTTON") document.activeElement.blur();
   lenh();
 }
 
-/* ---------- KHỞI ĐỘNG ---------- */
+// Khởi động
 document.addEventListener("keydown", xuLyPhimTat);
 document.getElementById("menuBtn").onclick = () => document.body.classList.toggle("menu-open");
 window.addEventListener("hashchange", router);
 renderTopNav();
 renderSidebar();
 router();
-// Đăng nhập / đăng xuất khi đang mở trang thuật toán -> vẽ lại phần "Bài của tôi"
 sanSang.then(App => App.theoDoi(() => { if (currentAlgo && document.getElementById("baiCuaToi")) taiBaiCuaToi(currentAlgo); }));

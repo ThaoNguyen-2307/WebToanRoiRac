@@ -1,24 +1,11 @@
-/* =========================================================
-   so-sanh.js — "📊 SO SÁNH CÁC CÁCH GIẢI" TRÊN CÙNG MỘT DỮ LIỆU
-   Bấm nút ở trang thuật toán: web chạy mọi cách giải với dữ liệu đang nhập, rồi hiện
-   bảng số liệu + biểu đồ cột trong một hộp thoại.
-
-   SO_SANH[id](input) trả về:
-     { tieuDe, cot: [tên các cột], hang: [[giá trị từng cột], ...],
-       bieuDo: { ten, donVi, muc: [{ nhan, giaTri, ghiChu }] },   (không bắt buộc)
-       nhanXet: "đoạn kết luận" }
-   ========================================================= */
-
 const SO_SANH = {};
 const dinhDang = x => (typeof x === "number" ? x.toLocaleString("vi-VN") : String(x));
 
-// Chạy thử 1 cách giải, lỗi (dữ liệu quá lớn...) thì trả về null kèm thông báo
 function chayThu(id, input) {
   try { return { steps: SOLVERS[id](input) }; }
   catch (e) { return { loi: e.message }; }
 }
 
-/* ---------- Fibonacci: đệ quy thường / top-down / bottom-up ---------- */
 SO_SANH.fibonacci = input => {
   const n = input.n;
   const cach = ALGORITHMS.find(a => a.id === "fibonacci").inputs.find(x => x.key === "mode").options;
@@ -31,7 +18,6 @@ SO_SANH.fibonacci = input => {
       kq = s.ketQua;
       soPhep = s.loai === "bang" ? s.soPhepCong : s.soLanGoi;
     } else if (mode.startsWith("Đệ quy") && n <= 70) {
-      // Quá lớn để chạy: số lần gọi của đệ quy thường đúng bằng 2·f(n) − 1
       kq = String(fibSo(n));
       soPhep = Number(2n * fibSo(n) - 1n);
       ghiChu = "tính theo công thức 2·f(n) − 1, quá lớn để mô phỏng";
@@ -49,12 +35,12 @@ SO_SANH.fibonacci = input => {
     bieuDo: { ten: "Số lần gọi hàm / phép cộng", muc },
     nhanXet: dq && td
       ? `Với n = ${n}, đệ quy thường cần ${dinhDang(dq.giaTri)} lần gọi hàm, gấp khoảng ${dinhDang(Math.round(dq.giaTri / Math.max(1, td.giaTri)))} lần top-down (${dinhDang(td.giaTri)}). `
-        + `Lý do: đệ quy thường tính lại cùng một fib(k) nhiều lần, còn quy hoạch động lưu kết quả để dùng lại. Bottom-up còn không cần gọi đệ quy.`
+      + `Lý do: đệ quy thường tính lại cùng một fib(k) nhiều lần, còn quy hoạch động lưu kết quả để dùng lại. Bottom-up còn không cần gọi đệ quy.`
       : ""
   };
 };
 
-/* ---------- Người du lịch: nhánh cận / vét cạn / tham lam ---------- */
+// Người du lịch: nhánh cận / vét cạn / tham lam
 SO_SANH.tsp = input => {
   const cach = ALGORITHMS.find(a => a.id === "tsp").inputs.find(x => x.key === "mode").options;
   const mt = input.matrix, n = mt.length, s = input.start - 1;
@@ -88,12 +74,12 @@ SO_SANH.tsp = input => {
     bieuDo: { ten: "Số nút phải xét trên cây tìm kiếm", muc },
     nhanXet: nc && vc
       ? `Nhánh cận chỉ xét ${dinhDang(nc.giaTri)} nút, bằng ${Math.round((nc.giaTri / vc.giaTri) * 100)}% so với vét cạn (${dinhDang(vc.giaTri)} nút), mà vẫn ra đúng chi phí tối ưu. `
-        + `Cách tham lam nhanh nhất nhưng có thể cho kết quả không tối ưu.`
+      + `Cách tham lam nhanh nhất nhưng có thể cho kết quả không tối ưu.`
       : ""
   };
 };
 
-/* ---------- Xếp ba lô: QHĐ (ba lô 1, ba lô 2) và vét cạn ---------- */
+// Xếp ba lô: QHĐ
 SO_SANH.balo = input => {
   const ten1 = "Ba lô 1 (mỗi vật lấy tối đa 1 lần)", ten2 = "Ba lô 2 (mỗi vật lấy tối đa m lần)";
   const m = input.m > 0 ? input.m : 2;
@@ -129,13 +115,13 @@ SO_SANH.balo = input => {
       + (soPA > soO
         ? `Vét cạn phải thử 2ⁿ = ${dinhDang(soPA)} cách chọn, còn quy hoạch động chỉ điền ${dinhDang(soO)} ô. `
         : `Với ít đồ vật như thế này, vét cạn (${dinhDang(soPA)} cách chọn) còn ít hơn số ô của bảng QHĐ (${dinhDang(soO)} ô). `
-          + `Nhưng mỗi khi thêm 1 vật, số cách chọn của vét cạn tăng gấp đôi, còn bảng QHĐ chỉ thêm 1 hàng. `)
+        + `Nhưng mỗi khi thêm 1 vật, số cách chọn của vét cạn tăng gấp đôi, còn bảng QHĐ chỉ thêm 1 hàng. `)
       + `VD với 40 vật, vét cạn phải thử hơn 1 nghìn tỷ cách, trong khi QHĐ chỉ cần 41 × (b + 1) ô. `
       + `Ba lô 2 cho phép lấy nhiều cái mỗi vật nên giá trị có thể lớn hơn ba lô 1.`
   };
 };
 
-/* ---------- BFS và DFS ---------- */
+// BFS và DFS
 SO_SANH.bfsdfs = input => {
   const hang = [];
   const thuTu = {};
@@ -156,11 +142,11 @@ SO_SANH.bfsdfs = input => {
     nhanXet: giong
       ? "Với đồ thị này, hai cách cho cùng thứ tự thăm. Thử đồ thị có nhiều nhánh hơn để thấy khác biệt."
       : "BFS thăm các đỉnh gần đỉnh xuất phát trước (theo từng lớp), còn DFS đi sâu theo một nhánh đến cùng rồi mới quay lui. "
-        + "Vì vậy cây duyệt BFS thường thấp và rộng, cây DFS thường cao và hẹp."
+      + "Vì vậy cây duyệt BFS thường thấp và rộng, cây DFS thường cao và hẹp."
   };
 };
 
-/* ---------- Hộp thoại hiện kết quả ---------- */
+// Hộp thoại hiện kết quả
 function moSoSanh() {
   const loi = kiemTraDuLieu(currentAlgo);
   baoLoiNhap(loi);
@@ -182,7 +168,7 @@ function moSoSanh() {
   nen.className = "modal-nen";
   nen.innerHTML = `
     <div class="modal modal-rong" role="dialog" aria-modal="true" aria-label="${kq.tieuDe}">
-      <h3>📊 ${kq.tieuDe}</h3>
+      <h3>${kq.tieuDe}</h3>
       <div class="table-wrap"><table class="table ss-bang">
         <thead><tr>${kq.cot.map(c => `<th>${c}</th>`).join("")}</tr></thead>
         <tbody>${kq.hang.map(h => `<tr>${h.map(o => `<td>${o}</td>`).join("")}</tr>`).join("")}</tbody>
@@ -200,7 +186,6 @@ function moSoSanh() {
   nen.querySelector("#dongSoSanh").focus();
 }
 
-// Gọi sau khi vẽ trang thuật toán: chỉ hiện nút với thuật toán có nhiều cách giải để so sánh
 function ganSoSanh() {
   const nut = document.getElementById("btnSoSanh");
   if (!nut) return;

@@ -1,12 +1,7 @@
 // =========================================================
 // firestore.rules — LUẬT BẢO MẬT CƠ SỞ DỮ LIỆU
-// Dán toàn bộ file này vào: Firebase Console -> Firestore Database -> Rules -> Publish
 //
 // Các bảng (collection):
-//   users/{uid}                 hồ sơ tài khoản (vaiTro: "user" | "admin", biKhoa)
-//   users/{uid}/history/{id}    lịch sử mô phỏng của từng người
-//   users/{uid}/baiLuu/{id}     "Bài của tôi": dữ liệu người dùng tự lưu, có đặt tên
-//   examples/{id}               ví dụ có sẵn của từng thuật toán (admin quản lý)
 // =========================================================
 rules_version = '2';
 service cloud.firestore {
@@ -24,12 +19,10 @@ service cloud.firestore {
       // Xem hồ sơ: chính chủ hoặc admin
       allow read: if daDangNhap() && (request.auth.uid == uid || laAdmin());
 
-      // Tạo hồ sơ lần đầu: chỉ được tạo cho chính mình, luôn là "user" và không bị khóa
       allow create: if daDangNhap() && request.auth.uid == uid
                     && request.resource.data.vaiTro == 'user'
                     && request.resource.data.biKhoa == false;
 
-      // Sửa: admin sửa được hết; chính chủ sửa được hồ sơ nhưng KHÔNG được tự đổi vaiTro, biKhoa
       allow update: if laAdmin() ||
                     (daDangNhap() && request.auth.uid == uid &&
                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['vaiTro', 'biKhoa']));
@@ -39,7 +32,6 @@ service cloud.firestore {
         allow read, create, delete: if daDangNhap() && request.auth.uid == uid;
       }
 
-      // Bài của tôi: chỉ chính chủ được xem, lưu, đổi tên, xóa. Tên bài từ 1 đến 60 ký tự
       match /baiLuu/{id} {
         allow read, delete: if daDangNhap() && request.auth.uid == uid;
         allow create, update: if daDangNhap() && request.auth.uid == uid
@@ -54,7 +46,6 @@ service cloud.firestore {
       allow read: if laAdmin();
     }
 
-    // Ví dụ có sẵn: ai cũng xem được, chỉ admin được thêm / sửa / xóa
     match /examples/{id} {
       allow read: if true;
       allow write: if laAdmin();

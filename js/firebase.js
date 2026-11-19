@@ -1,10 +1,3 @@
-/* =========================================================
-   firebase.js — PHẦN DÙNG CHUNG cho mọi trang
-   - Kết nối Firebase (đăng nhập + cơ sở dữ liệu Firestore)
-   - Lấy / tạo hồ sơ người dùng, phân quyền (user | admin)
-   - Vẽ khu vực "Đăng nhập / tên người dùng" trên thanh tiêu đề
-   (Giống includes/init.php + kiem_tra_quyen.php + ham_chung.php trong bài PHP)
-   ========================================================= */
 import { firebaseConfig } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut }
@@ -12,7 +5,6 @@ import { getAuth, onAuthStateChanged, signOut }
 import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Đã điền thông tin Firebase chưa? (còn chữ "DIEN_" nghĩa là chưa)
 export const daCauHinh = !Object.values(firebaseConfig).some(v => String(v).includes("DIEN_"));
 
 export let auth = null;
@@ -24,12 +16,9 @@ if (daCauHinh) {
   db = getFirestore(app);
 }
 
-// Đường dẫn về thư mục gốc: trang trong admin/ đặt <body data-base="../">
 export const BASE = document.body.dataset.base || "";
 
-/* ---------- HỒ SƠ NGƯỜI DÙNG ----------
-   Mỗi tài khoản có 1 document trong bảng users/{uid}:
-   { email, ten, anh, dangNhapBang, vaiTro: "user" | "admin", biKhoa, ngayTao, lanCuoi }        */
+// Hồ sơ người dùng
 export async function layHoSo(user, tenMacDinh = "") {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
@@ -37,7 +26,6 @@ export async function layHoSo(user, tenMacDinh = "") {
     updateDoc(ref, { lanCuoi: serverTimestamp() }).catch(() => {});
     return { uid: user.uid, ...snap.data() };
   }
-  // Lần đầu đăng nhập -> tạo hồ sơ mới, mặc định là người dùng thường
   const hoSo = {
     email: user.email || "",
     ten: tenMacDinh || user.displayName || (user.email || "").split("@")[0] || "Người dùng",
@@ -52,8 +40,6 @@ export async function layHoSo(user, tenMacDinh = "") {
   return { uid: user.uid, ...hoSo };
 }
 
-/* Theo dõi trạng thái đăng nhập. callback(user, hoSo) được gọi mỗi khi đăng nhập/đăng xuất.
-   Chưa đăng nhập: callback(null, null)                                                        */
 let tamDungTheoDoi = false;                         // dùng khi đang đăng ký (xem dang-nhap.js)
 export function tamDung(giaTri) { tamDungTheoDoi = giaTri; }
 
@@ -77,7 +63,7 @@ export function theoDoiDangNhap(callback) {
   });
 }
 
-/* Trang bắt buộc đăng nhập (giống yeuCauCauThu() trong PHP) */
+// Trang bắt buộc đăng nhập (giống yeuCauCauThu() trong PHP)
 export function yeuCauDangNhap(callback) {
   theoDoiDangNhap((user, hoSo) => {
     if (!user) {
@@ -88,7 +74,7 @@ export function yeuCauDangNhap(callback) {
   });
 }
 
-/* Trang chỉ dành cho admin (giống yeuCauAdmin() trong PHP) */
+// Trang chỉ dành cho admin (giống yeuCauAdmin() trong PHP)
 export function yeuCauAdmin(callback) {
   yeuCauDangNhap((user, hoSo) => {
     if (hoSo?.vaiTro !== "admin") {
@@ -109,7 +95,7 @@ export async function dangXuat() {
   location.href = `${BASE}index.html`;
 }
 
-/* ---------- KHU VỰC NGƯỜI DÙNG TRÊN THANH TIÊU ĐỀ ---------- */
+// Khu vực người dùng trên thanh tiêu đề
 export function veThanhNguoiDung(user, hoSo) {
   const khung = document.getElementById("userArea");
   if (!khung) return;
@@ -135,15 +121,13 @@ export function veThanhNguoiDung(user, hoSo) {
   document.getElementById("btnDangXuat").onclick = dangXuat;
 }
 
-/* ---------- HÀM TIỆN ÍCH ---------- */
+// Hàm tiện ích
 
-// Chống chèn mã HTML khi in dữ liệu người dùng (giống hàm e() trong PHP)
 export function e(s) {
   return String(s ?? "").replace(/[&<>"']/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// Ảnh đại diện: có ảnh thì dùng ảnh, không thì hiện chữ cái đầu của tên
 export function anhDaiDien(url, ten, lop = "avatar") {
   if (url) return `<img class="${lop}" src="${e(url)}" alt="" referrerpolicy="no-referrer">`;
   return `<span class="${lop} avatar-chu">${e((ten || "?").trim().charAt(0).toUpperCase())}</span>`;

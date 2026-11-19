@@ -1,16 +1,3 @@
-/* =========================================================
-   de-bai.js — ĐỀ BÀI TỰ SINH TỪ DỮ LIỆU ĐANG NHẬP
-   Người dùng chỉ nhập dữ liệu ở cột trái. Khu vực mô phỏng sẽ "đọc lại" dữ liệu đó
-   thành đề bài cụ thể bằng tiếng Việt, đổi ngay khi sửa ô nhập hoặc chọn ví dụ.
-   Khi đang mô phỏng, đề bài thu gọn thành 1 dòng phía trên hình vẽ.
-
-   DE_BAI[id](input) trả về:
-     { tom:   câu đề bài ngắn (1 dòng, dùng khi thu gọn),
-       noiDung: đề bài đầy đủ (HTML),
-       them:  phần minh họa thêm, VD danh sách đồ vật, hình đồ thị (HTML, không bắt buộc),
-       canTim: cần tìm gì (HTML) }
-   ========================================================= */
-
 const DE_BAI = {};
 const so = x => Number(x).toLocaleString("vi-VN");
 const giaiThua = n => { let k = 1; for (let i = 2; i <= n; i++) k *= i; return k; };
@@ -22,12 +9,11 @@ function vaiCauHinh(ds, tong) {
   return ds.slice(0, 3).join(", ") + ", …, " + ds[ds.length - 1];
 }
 
-/* ---------- Liệt kê ---------- */
+// Liệt kê
 DE_BAI.lietke = ({ type, n, m }) => {
   if (type === "Hoán vị của n phần tử") {
     const tong = giaiThua(n);
     const dau = [], cuoi = [];
-    // vài hoán vị đầu theo thứ tự từ điển + hoán vị cuối (giảm dần)
     const tang = Array.from({ length: n }, (_, i) => i + 1);
     dau.push(tang.join(""));
     if (n >= 2) dau.push([...tang.slice(0, n - 2), tang[n - 1], tang[n - 2]].join(""));
@@ -67,7 +53,7 @@ function hoanViNho(n) {
   return kq;
 }
 
-/* ---------- Xếp hậu ---------- */
+// Xếp hậu
 const SO_LOI_GIAI_HAU = [null, 1, 0, 0, 2, 10, 4, 40, 92, 352, 724, 2680, 14200];
 DE_BAI.nhau = ({ n, timKiem }) => {
   const soLG = SO_LOI_GIAI_HAU[n];
@@ -82,7 +68,7 @@ DE_BAI.nhau = ({ n, timKiem }) => {
   };
 };
 
-/* ---------- Tháp Hà Nội ---------- */
+// Tháp Hà Nội
 DE_BAI.hanoi = ({ n }) => ({
   tom: `Chuyển ${n} đĩa từ cọc A sang cọc C.`,
   noiDung: `Có 3 cọc A, B, C. Cọc A đang có <b>${n}</b> đĩa, đĩa lớn ở dưới, đĩa nhỏ ở trên.
@@ -90,7 +76,7 @@ DE_BAI.hanoi = ({ n }) => ({
   canTim: `Thứ tự các lần chuyển. Cần ít nhất <b>2<sup>${n}</sup> − 1 = ${so(2 ** n - 1)}</b> lần chuyển.`
 });
 
-/* ---------- Fibonacci ---------- */
+// Fibonacci
 DE_BAI.fibonacci = ({ n, mode }) => {
   const kq = n <= 1000 ? String(fibSo(n)) : null;     // n quá lớn thì không tính sẵn (tốn thời gian)
   const ghi = mode.startsWith("Đệ quy")
@@ -105,7 +91,7 @@ DE_BAI.fibonacci = ({ n, mode }) => {
   };
 };
 
-/* ---------- Xếp ba lô ---------- */
+// Xếp ba lô
 DE_BAI.balo = input => {
   const loai2 = input.loai.startsWith("Ba lô 2");
   const a = String(input.a).split(/[,;\s]+/).filter(Boolean).map(Number);
@@ -126,14 +112,14 @@ DE_BAI.balo = input => {
   };
 };
 
-/* ---------- Đồ thị: hình xem trước dùng chung ---------- */
+// Đồ thị: hình xem trước dùng chung
 function hinhDeBai(mt, coTrongSo, lopDinh = () => "") {
   return `<div class="de-bai-hinh">${veDoThi({ n: mt.length, mt, coHuong: !laDoiXung(mt), nhanCanh: coTrongSo && mt.length <= 8, lopDinh })}</div>`;
 }
 const loaiDoThi = mt => (laDoiXung(mt) ? "vô hướng" : "có hướng (cạnh có mũi tên chỉ chiều đi)");
 const soCanh = mt => { let k = 0; mt.forEach((h, i) => h.forEach((x, j) => { if (i !== j && x > 0) k++; })); return laDoiXung(mt) ? k / 2 : k; };
 
-/* ---------- Người du lịch ---------- */
+// Người du lịch
 DE_BAI.tsp = ({ matrix: mt, start, mode }) => {
   const n = mt.length;
   const vd = mt[0][1] > 0 ? ` (VD đi từ 1 đến 2 tốn ${mt[0][1]})` : "";
@@ -147,7 +133,7 @@ DE_BAI.tsp = ({ matrix: mt, start, mode }) => {
   };
 };
 
-/* ---------- BFS / DFS ---------- */
+// Bfs / dfs
 DE_BAI.bfsdfs = ({ matrix: mt, start, mode }) => {
   const bfs = mode.startsWith("BFS");
   return {
@@ -160,7 +146,7 @@ DE_BAI.bfsdfs = ({ matrix: mt, start, mode }) => {
   };
 };
 
-/* ---------- Dijkstra ---------- */
+// Dijkstra
 DE_BAI.dijkstra = ({ matrix: mt, start, end }) => ({
   tom: `Tìm đường đi ngắn nhất từ đỉnh ${start} đến đỉnh ${end}.`,
   noiDung: `Cho đồ thị <b>${mt.length}</b> đỉnh, <b>${soCanh(mt)}</b> cạnh, ${loaiDoThi(mt)}. Số ghi trên mỗi cạnh là <b>độ dài</b> của cạnh đó.`,
@@ -168,10 +154,7 @@ DE_BAI.dijkstra = ({ matrix: mt, start, end }) => ({
   canTim: `<b>Đường đi ngắn nhất</b> từ đỉnh <b>${start}</b> (vàng) đến đỉnh <b>${end}</b> (xanh đậm) và độ dài của nó.`
 });
 
-/* =========================================================
-   HIỂN THỊ
-   ========================================================= */
-// Đọc dữ liệu hiện tại -> đề bài. Dữ liệu đang sai thì trả về null (lỗi sẽ hiện khi bấm chạy)
+// Hiển thị
 function layDeBai() {
   const tao = DE_BAI[currentAlgo?.id];
   if (!tao || !document.getElementById("inputForm")) return null;
@@ -179,7 +162,6 @@ function layDeBai() {
   catch (e) { return null; }
 }
 
-/* Gọi khi dữ liệu đổi hoặc khi chưa có mô phỏng: hiện đề bài đầy đủ trong khu vực mô phỏng */
 function veDeBai() {
   if (sim.steps.length) return;                         // đang mô phỏng thì để yên hình vẽ
   const viz = document.getElementById("viz");
@@ -197,8 +179,8 @@ function veDeBai() {
     : `<p class="viz-empty">Khu vực mô phỏng<br><small>Dữ liệu đang chưa hợp lệ, hãy sửa lại ở cột bên trái</small></p>`;
 }
 
-/* Khi đang mô phỏng: 1 dòng đề bài thu gọn đặt trên hình vẽ */
+// Khi đang mô phỏng: 1 dòng đề bài thu gọn đặt trên hình vẽ
 function dongDeBai() {
   const d = layDeBai();
-  return d?.tom ? `<div class="de-bai-gon" title="Đề bài"> ${d.tom}</div>` : "";
+  return d?.tom ? `<div class="de-bai-gon" title="Đề bài">${d.tom}</div>` : "";
 }

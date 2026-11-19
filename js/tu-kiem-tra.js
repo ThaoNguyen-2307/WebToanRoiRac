@@ -1,18 +1,5 @@
-/* =========================================================
-   tu-kiem-tra.js — CHẾ ĐỘ "TỰ KIỂM TRA" KHI MÔ PHỎNG
-   Bật ô "🧠 Tự kiểm tra": đang chạy từng bước, web dừng lại ở một số bước và hỏi
-   "bước tiếp theo sẽ thế nào?". Người học chọn đáp án, web báo đúng/sai, giải thích rồi chạy tiếp.
-
-   Mỗi thuật toán khai báo 1 hàm tạo câu hỏi trong HOI:
-     HOI[id] = { cach, tao(steps, i) }
-       tao(steps, i): câu hỏi cho bước i (hỏi TRƯỚC khi hiện bước i, lúc màn hình còn ở bước i - 1)
-                      trả về { hoi, lua: [các đáp án], dung: chỉ số đáp án đúng (hoặc mảng) } hoặc null
-       cach         : bỏ qua bao nhiêu câu giữa 2 lần hỏi (để không hỏi quá dày)
-   ========================================================= */
-
 const HOI = {};
 
-// Đảo thứ tự đáp án theo số bước (cố định, không ngẫu nhiên) để đáp án đúng không luôn nằm đầu
 function xepDapAn(lua, dung, i) {
   const k = i % lua.length;
   const moi = [...lua.slice(k), ...lua.slice(0, k)];
@@ -21,10 +8,9 @@ function xepDapAn(lua, dung, i) {
 }
 const khongTrung = ds => [...new Set(ds.map(String))];
 
-/* ---------- Câu hỏi của từng thuật toán ---------- */
+// Câu hỏi của từng thuật toán
 const TEN_COC_KT = ["A", "B", "C"];
 
-// Tháp Hà Nội: lần chuyển tiếp theo là gì? (đáp án là các nước đi hợp lệ)
 HOI.hanoi = {
   cach: 0,
   tao(steps, i) {
@@ -118,7 +104,6 @@ HOI.balo = {
   }
 };
 
-// Người du lịch: cắt nhánh hay đi tiếp / có lập kỷ lục không / tham lam đi đâu
 HOI.tsp = {
   cach: 0,
   tao(steps, i) {
@@ -186,12 +171,9 @@ HOI.dijkstra = {
   }
 };
 
-/* =========================================================
-   GIAO DIỆN VÀ ĐIỀU KHIỂN
-   ========================================================= */
+// Giao diện và điều khiển
 const KT = { bat: false, cauHoi: null, daTraLoi: new Map(), dung: 0, tong: 0, dangHoi: -1 };
 
-// Tạo trước danh sách câu hỏi cho toàn bộ các bước (gọi khi bắt đầu mô phỏng hoặc khi bật chế độ)
 function ktTaoCauHoi() {
   KT.cauHoi = new Map(); KT.daTraLoi = new Map(); KT.dung = 0; KT.tong = 0; KT.dangHoi = -1;
   const g = HOI[currentAlgo?.id];
@@ -212,7 +194,6 @@ function ktXoa() {
   ktCapNhatDiem();
 }
 
-/* Gọi ở đầu goToStep(i). Trả về true nếu phải dừng lại để hỏi (chưa được hiện bước i). */
 function ktChan(i) {
   if (!KT.bat || !KT.cauHoi || i !== sim.index + 1) return false;
   const q = KT.cauHoi.get(i);
@@ -227,7 +208,7 @@ function ktVeHop(i, q) {
   KT.dangHoi = i;
   const hop = document.getElementById("hopHoi");
   hop.innerHTML = `
-    <div class="kt-dau"><span class="kt-nhan">🧠 Tự kiểm tra</span><span class="kt-goi-y">Chọn đáp án (hoặc bấm phím 1–${q.lua.length})</span></div>
+    <div class="kt-dau"><span class="kt-nhan">Tự kiểm tra</span><span class="kt-goi-y">Chọn đáp án (hoặc bấm phím 1–${q.lua.length})</span></div>
     <p class="kt-hoi">${q.hoi}</p>
     <div class="kt-ds">${q.lua.map((l, k) => `<button type="button" class="kt-lua" data-k="${k}"><b>${k + 1}</b>${l}</button>`).join("")}</div>
     <div class="kt-ket-qua" hidden></div>`;
@@ -271,7 +252,7 @@ function ktCapNhatDiem() {
   const soCau = KT.cauHoi ? KT.cauHoi.size : 0;
   o.hidden = !KT.bat;
   o.textContent = KT.tong ? `Đúng ${KT.dung}/${KT.tong}` + (KT.tong === soCau ? " · xong!" : "")
-                          : soCau ? `${soCau} câu hỏi` : (sim.steps.length ? "Không có câu hỏi" : "");
+    : soCau ? `${soCau} câu hỏi` : (sim.steps.length ? "Không có câu hỏi" : "");
 }
 
 // Gọi sau khi vẽ trang thuật toán

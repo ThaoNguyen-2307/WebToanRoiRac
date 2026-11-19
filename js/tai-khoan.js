@@ -1,14 +1,5 @@
-/* =========================================================
-   tai-khoan.js — TRANG "TÀI KHOẢN CỦA TÔI" (người đã đăng nhập)
-   - Xem hồ sơ, đổi tên hiển thị
-   - Đổi mật khẩu (chỉ với tài khoản đăng ký bằng email)
-   - Bài của tôi (bài đã lưu có đặt tên): mở, đổi tên, xóa
-   - Lịch sử các bài đã mô phỏng: mô phỏng lại, xóa
-   ========================================================= */
-import {
-  auth, db, yeuCauDangNhap, veThanhNguoiDung, e, anhDaiDien, ngayGio,
-  tenCachDangNhap, loiTiengViet, thongBao
-} from "./firebase.js";
+import { auth, db, yeuCauDangNhap, veThanhNguoiDung, e, anhDaiDien, ngayGio,
+         tenCachDangNhap, loiTiengViet, thongBao } from "./firebase.js";
 import { updateProfile, EmailAuthProvider, reauthenticateWithCredential, updatePassword }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, updateDoc, collection, query, orderBy, limit, getDocs, deleteDoc, writeBatch }
@@ -75,7 +66,7 @@ function veTrang(user, hoSo) {
                 <input type="password" name="nhapLai" autocomplete="new-password" required></label>
               <button class="btn primary">Đổi mật khẩu</button>
             </form>`
-      : `<p class="muted">Bạn đăng nhập bằng ${tenCachDangNhap(hoSo.dangNhapBang)}, nên mật khẩu do
+          : `<p class="muted">Bạn đăng nhập bằng ${tenCachDangNhap(hoSo.dangNhapBang)}, nên mật khẩu do
              ${tenCachDangNhap(hoSo.dangNhapBang)} quản lý. Không cần đổi mật khẩu ở đây.</p>`}
         </section>
       </div>
@@ -98,7 +89,7 @@ function veTrang(user, hoSo) {
       <div id="lichSu"><p class="muted">Đang tải...</p></div>
     </section>`;
 
-  /* Đổi ảnh đại diện: lưu vào trường "anh" của users/{uid} */
+  // Đổi ảnh đại diện: lưu vào trường "anh" của users/{uid}
   document.getElementById("nutDoiAnh").onclick = async () => {
     const anhMoi = await moDoiAnh(hoSo.anh || user.photoURL || "", hoSo.ten);
     if (anhMoi === null) return;                         // bấm Hủy
@@ -111,7 +102,7 @@ function veTrang(user, hoSo) {
     } catch (err) { thongBao("tbAnh", loiTiengViet(err)); }
   };
 
-  /* Đổi tên */
+  // Đổi tên
   document.getElementById("formTen").onsubmit = async ev => {
     ev.preventDefault();
     const ten = ev.target.elements.ten.value.trim();
@@ -125,7 +116,6 @@ function veTrang(user, hoSo) {
     } catch (err) { thongBao("tbTen", loiTiengViet(err)); }
   };
 
-  /* Đổi mật khẩu: phải nhập lại mật khẩu cũ để xác nhận (Firebase yêu cầu) */
   themNutMat(trang);     // nút con mắt cho các ô mật khẩu
   const formMK = document.getElementById("formMatKhau");
   if (formMK) formMK.onsubmit = async ev => {
@@ -143,7 +133,7 @@ function veTrang(user, hoSo) {
   };
 }
 
-/* ---------- Bài của tôi (users/{uid}/baiLuu) ---------- */
+// Bài của tôi
 async function taiBaiLuu(user) {
   const khung = document.getElementById("baiLuu");
   try {
@@ -159,8 +149,8 @@ async function taiBaiLuu(user) {
         <thead><tr><th>Tên bài</th><th>Bài toán</th><th>Dữ liệu</th><th>Ngày lưu</th><th></th></tr></thead>
         <tbody>
           ${snap.docs.map(d => {
-      const b = d.data();
-      return `<tr>
+            const b = d.data();
+            return `<tr>
               <td class="ten-bai" data-o-ten="${d.id}"><b>${e(b.ten)}</b></td>
               <td>${e(b.algoName)}</td>
               <td class="data-cell">${tomTatDuLieu(b.algoId, b.values)}</td>
@@ -171,14 +161,13 @@ async function taiBaiLuu(user) {
                 <button class="btn sm danger" data-xoa-bai="${d.id}">Xóa</button>
               </div></td>
             </tr>`;
-    }).join("")}
+          }).join("")}
         </tbody>
       </table></div>`;
 
-    // Mở: gửi dữ liệu sang trang thuật toán (main.js tự điền vào form)
     khung.querySelectorAll("[data-mo]").forEach(b => b.onclick = () => {
       const bai = theoId[b.dataset.mo];
-      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: bai.algoId, values: bai.values, ten: bai.ten })); } catch (e) { }
+      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: bai.algoId, values: bai.values, ten: bai.ten })); } catch (e) {}
       location.href = `index.html#/algo/${bai.algoId}`;
     });
 
@@ -225,7 +214,7 @@ async function taiBaiLuu(user) {
   }
 }
 
-/* ---------- Lịch sử mô phỏng (users/{uid}/history) ---------- */
+// Lịch sử mô phỏng
 async function taiLichSu(user) {
   const khung = document.getElementById("lichSu");
   try {
@@ -246,8 +235,8 @@ async function taiLichSu(user) {
         </tr></thead>
         <tbody>
           ${snap.docs.map(d => {
-      const h = d.data();
-      return `<tr>
+            const h = d.data();
+            return `<tr>
               <td class="col-check"><input type="checkbox" class="chon-muc" value="${d.id}" aria-label="Chọn mục này"></td>
               <td class="nowrap">${ngayGio(h.createdAt)}</td>
               <td>${e(h.algoName)}</td>
@@ -257,16 +246,15 @@ async function taiLichSu(user) {
                 <button class="btn sm danger" data-xoa="${d.id}">Xóa</button>
               </div></td>
             </tr>`;
-    }).join("")}
+          }).join("")}
         </tbody>
       </table></div>`;
 
     const theoId = Object.fromEntries(snap.docs.map(d => [d.id, d.data()]));
 
-    // Mô phỏng lại: ghi tạm dữ liệu rồi mở trang thuật toán, main.js sẽ tự điền vào form
     khung.querySelectorAll("[data-chay]").forEach(b => b.onclick = () => {
       const h = theoId[b.dataset.chay];
-      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: h.algoId, values: h.values })); } catch (e) { }
+      try { sessionStorage.setItem("napLai", JSON.stringify({ algoId: h.algoId, values: h.values })); } catch (e) {}
       location.href = `index.html#/algo/${h.algoId}`;
     });
 
@@ -277,7 +265,7 @@ async function taiLichSu(user) {
       taiLichSu(user);
     });
 
-    /* ----- Chọn nhiều mục để xóa ----- */
+    // Chọn nhiều mục để xóa
     const chonHet = document.getElementById("chonHet");
     const nutXoa = document.getElementById("xoaDaChon");
     const oChon = [...khung.querySelectorAll(".chon-muc")];
@@ -317,8 +305,6 @@ async function taiLichSu(user) {
   }
 }
 
-// Hiện dữ liệu theo đúng thứ tự và tên ô nhập của thuật toán (lấy từ data.js)
-// VD: { type: "Hoán vị...", n: "4", m: "2" } -> "Bài toán = Hoán vị...  n = 4"   (bỏ ô m vì không dùng)
 function tomTatDuLieu(algoId, values = {}) {
   const algo = ALGORITHMS.find(a => a.id === algoId);
   const dsO = algo ? algo.inputs : Object.keys(values).map(key => ({ key, label: key }));

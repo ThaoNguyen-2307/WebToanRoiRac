@@ -1,29 +1,14 @@
-/* =========================================================
-   fibonacci.js — FIBONACCI: ĐỆ QUY THƯỜNG và QUY HOẠCH ĐỘNG
-   Quy ước theo slide của thầy: f(1) = f(2) = 1, f(6) = 8.
-
-   3 cách giải (ô "Cách giải"), mỗi cách có mã giả riêng (maGiaTheo trong data.js):
-   - Đệ quy thường      : 0 fib(n) | 1 if n<=2 return 1 | 2 return fib(n-1)+fib(n-2)
-   - QHĐ top-down       : 0 fib(n) | 1 if n<=2 ... | 2 nếu có trong bảng nhớ ... | 3 nho[n] = ... | 4 return nho[n]
-   - QHĐ bottom-up      : 0 fib(n) | 1 F[1]=F[2]=1 | 2 for i = 3..n | 3 F[i] = F[i-1]+F[i-2] | 4 return F[n]
-
-   1. SOLVERS.fibonacci : chạy thuật toán, ghi lại từng bước
-   2. VE.fibonacci      : vẽ cây lời gọi (2 cách đệ quy) hoặc bảng F (bottom-up)
-   3. Lý thuyết
-   ========================================================= */
-
 const DE_QUY = "Đệ quy thường (vét cạn)";
 const TOP_DOWN = "QHĐ top-down (có bảng nhớ)";
 const BOTTOM_UP = "QHĐ bottom-up (vòng lặp)";
 
-// Số Fibonacci có thể rất lớn (f(100) có 21 chữ số) nên dùng BigInt để không bị sai số
 function fibSo(n) {
   let truoc = 1n, hienTai = 1n;
   for (let i = 3; i <= n; i++) [truoc, hienTai] = [hienTai, truoc + hienTai];
   return hienTai;
 }
 
-/* ---------- 1. HÀM GIẢI ---------- */
+// Hàm giải
 SOLVERS.fibonacci = function (input) {
   const n = input.n;
   const mode = input.mode;
@@ -31,7 +16,6 @@ SOLVERS.fibonacci = function (input) {
 
   // Báo trước nếu quá nhiều bước, khỏi chạy rồi mới biết
   if (mode === DE_QUY) {
-    // Đệ quy thường gọi hàm đúng 2·f(n) − 1 lần, mỗi lần ghi khoảng 2 bước
     if (n > 40 || Number(fibSo(n)) * 4 > GIOI_HAN_BUOC)
       loiDuLieu("n", `Đệ quy thường với n = ${n} phải gọi hàm ${(2n * fibSo(n) - 1n).toLocaleString("vi-VN")} lần, trình duyệt sẽ bị treo. `
         + `Hãy nhập n ≤ 20, hoặc chọn cách QHĐ để thấy QHĐ nhanh hơn thế nào.`);
@@ -41,8 +25,6 @@ SOLVERS.fibonacci = function (input) {
   return giaiDeQuy(n, mode === TOP_DOWN);
 };
 
-/* Đệ quy thường và top-down: cùng vẽ CÂY LỜI GỌI.
-   Mỗi nút cây = 1 lần gọi fib(k): { id, cha, k, giaTri, xong (thứ tự hoàn thành), nho (lấy từ bảng nhớ) } */
 function giaiDeQuy(n, coNho) {
   const steps = [];
   const cay = [];
@@ -113,7 +95,7 @@ function giaiDeQuy(n, coNho) {
   return steps;
 }
 
-/* Bottom-up: điền bảng F[1..n] từ nhỏ đến lớn, không đệ quy */
+// Bottom-up: điền bảng F[1..n] từ nhỏ đến lớn, không đệ quy
 function giaiBottomUp(n) {
   if (n * 2 + 5 > GIOI_HAN_BUOC) kiemTraSoBuoc({ length: GIOI_HAN_BUOC });
   const steps = [];
@@ -140,8 +122,8 @@ function giaiBottomUp(n) {
   return steps;
 }
 
-/* ---------- 2. HÀM VẼ ---------- */
-const FIB_SO_NUT_TOI_DA = 70;   // đệ quy thường n = 9 có 67 lần gọi; nhiều hơn thì không vẽ cây
+// Hàm vẽ
+const FIB_SO_NUT_TOI_DA = 70;
 
 VE.fibonacci = function (step) {
   const s = step.state;
@@ -149,7 +131,6 @@ VE.fibonacci = function (step) {
 };
 
 function veCayFib(s) {
-  // Cây đầy đủ (đã biết trước khi vẽ bước đầu), chỉ tô các nút đã được gọi tới bước này
   const tongNut = s.cay.length;
   let cayHTML;
   if (tongNut > FIB_SO_NUT_TOI_DA) {
@@ -178,7 +159,6 @@ function veCayFib(s) {
         : daXong && nd.nho ? "nho"
         : daXong ? "xong"
         : duongDi.has(id) ? "tren" : "da";
-      // Nút bị gọi lặp lại (đệ quy thường) có viền đỏ để thấy chỗ lãng phí
       const lap = !s.coNho && daGoi && s.cay.some(o => o.id < id && o.k === nd.k && o.k > 2) ? " lap" : "";
       nut += `<g class="cay-nut ${lop}${lap}"><circle cx="${px(id)}" cy="${py(id)}" r="${r}"/>
               <text x="${px(id)}" y="${py(id) + 4}">${nd.k}</text>
@@ -193,7 +173,6 @@ function veCayFib(s) {
       </div>`;
   }
 
-  // Bảng đếm: fib(k) được gọi mấy lần (giống hình 11 trong slide)
   const dsK = [];
   for (let k = s.n; k >= 1; k--) dsK.push(k);
   const maxDem = Math.max(1, ...dsK.map(k => s.dem[k] || 0));
@@ -252,7 +231,7 @@ function veBangFib(s) {
     <p class="viz-note">Ô vàng: ô đang tính. Ô xanh: 2 ô được cộng lại. Mỗi ô chỉ tính đúng 1 lần.</p>`;
 }
 
-/* ---------- 3. LÝ THUYẾT ---------- */
+// Lý thuyết
 ALGORITHMS.find(a => a.id === "fibonacci").lyThuyet = `
   <p><b>Dãy Fibonacci:</b> 1, 1, 2, 3, 5, 8, 13, ... Mỗi số bằng tổng hai số đứng trước:
      f(1) = f(2) = 1 và f(n) = f(n − 1) + f(n − 2). Ví dụ f(6) = f(5) + f(4) = 5 + 3 = 8.</p>

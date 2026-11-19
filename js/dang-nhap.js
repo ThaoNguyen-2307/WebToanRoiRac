@@ -1,7 +1,3 @@
-/* =========================================================
-   dang-nhap.js — TRANG ĐĂNG NHẬP / ĐĂNG KÝ
-   2 cách: email + mật khẩu, Google
-   ========================================================= */
 import { auth, daCauHinh, BASE, layHoSo, theoDoiDangNhap, tamDung, loiTiengViet, thongBao }
   from "./firebase.js";
 import { themNutMat } from "./mat-khau.js";
@@ -14,7 +10,7 @@ const formDangNhap = document.getElementById("formDangNhap");
 const formDangKy = document.getElementById("formDangKy");
 themNutMat();      // nút con mắt cho các ô mật khẩu
 
-/* ---------- Chuyển tab Đăng nhập <-> Đăng ký ---------- */
+// Chuyển tab Đăng nhập <-> Đăng ký
 function moTab(ten) {
   document.querySelectorAll(".auth-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === ten));
   formDangNhap.hidden = ten !== "dang-nhap";
@@ -24,7 +20,7 @@ function moTab(ten) {
 document.querySelectorAll(".auth-tab").forEach(t => t.onclick = () => moTab(t.dataset.tab));
 if (location.hash === "#dang-ky") moTab("dang-ky");
 
-/* ---------- Thông báo để lại từ trang khác (VD: tài khoản bị khóa) ---------- */
+// Thông báo để lại từ trang khác
 try {
   const tb = sessionStorage.getItem("thongBao");
   if (tb) { thongBao("thongBao", tb); sessionStorage.removeItem("thongBao"); }
@@ -38,8 +34,7 @@ if (!daCauHinh) {
   });
 }
 
-/* ---------- Đăng nhập xong thì chuyển trang ----------
-   Admin -> trang quản trị; người dùng -> trang đang xem dở (next) hoặc trang chủ */
+// Đăng nhập xong thì chuyển trang
 function chuyenTiep(hoSo) {
   const next = new URLSearchParams(location.search).get("next");
   if (next && next.startsWith(location.origin)) location.href = next;
@@ -58,7 +53,7 @@ async function dangXuLy(nut, viec) {
   finally { nut.disabled = false; }
 }
 
-/* ---------- 1. Email + mật khẩu ---------- */
+// Email + mật khẩu
 formDangNhap.onsubmit = ev => {
   ev.preventDefault();
   const f = formDangNhap.elements;
@@ -98,8 +93,7 @@ document.getElementById("btnQuenMatKhau").onclick = ev => {
   });
 };
 
-/* ---------- 2. Google ----------
-   Mở cửa sổ đăng nhập của Google. Lần đầu dùng sẽ tự tạo tài khoản (= đăng ký). */
+// Google
 document.getElementById("btnGoogle").onclick = ev => {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });   // luôn cho chọn tài khoản Gmail

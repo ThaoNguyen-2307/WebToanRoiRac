@@ -1,20 +1,3 @@
-/* =========================================================
-   lietke.js — LIỆT KÊ BẰNG THUẬT TOÁN QUAY LUI
-   3 bài toán dùng chung 1 khuôn quay lui, chỉ khác "tập đề cử" và "điều kiện chấp nhận":
-     - Dãy nhị phân n bit : x[i] ∈ {0, 1}, luôn chấp nhận
-     - Hoán vị n phần tử  : x[i] ∈ {1..n}, chấp nhận nếu j chưa dùng
-     - Tổ hợp chập m của n: x[i] ∈ {x[i-1]+1 .. n-m+i}, luôn chấp nhận (dãy tăng dần)
-
-   Mã giả (trong data.js), đánh số dòng từ 0:
-     0  Try(i):
-     1    for j in tập đề cử của x[i]:
-     2      if j được chấp nhận:
-     3        x[i] = j
-     4        if i == n: in cấu hình x
-     5        else: Try(i + 1)
-     6        bỏ ghi nhận j  // quay lui
-   ========================================================= */
-
 SOLVERS.lietke = function (input) {
   const loai = input.type || "Dãy nhị phân n bit";
   const laNhiPhan = loai.startsWith("Dãy nhị phân");
@@ -22,12 +5,10 @@ SOLVERS.lietke = function (input) {
   const laToHop = loai.startsWith("Tổ hợp");
   const chiKetQua = input.cheDo === "Chỉ các cấu hình tìm được";
 
-  // n, m đã được kiểm tra là số nguyên dương trước khi gọi hàm này
   const n = input.n;
   if (laToHop && input.m > n) loiDuLieu("m", `Tổ hợp chập m của n cần m ≤ n (bạn nhập m = ${input.m}, n = ${n}).`);
   const m = laToHop ? input.m : n;   // độ dài cấu hình
 
-  // Ước lượng số cấu hình trước khi chạy: quá lớn thì báo ngay, khỏi làm treo máy
   let uocLuong = 1;
   for (let k = 1; k <= m && uocLuong <= GIOI_HAN_BUOC; k++)
     uocLuong = laNhiPhan ? uocLuong * 2 : laHoanVi ? uocLuong * k : uocLuong * (n - m + k) / k;
@@ -94,7 +75,6 @@ SOLVERS.lietke = function (input) {
   return steps;
 };
 
-/* ---------- HÀM VẼ: cây tìm kiếm + các ô x[i] + danh sách kết quả ---------- */
 const SO_LA_TOI_DA = 32;   // cây có quá nhiều lá thì không vẽ (sẽ rối)
 
 // Tính vị trí các nút của cây (chỉ tính 1 lần, lưu lại)
@@ -166,7 +146,7 @@ VE.lietke = function (step) {
     <div class="kq-list">${kq.length > 60 ? `<span class="viz-note">… và ${kq.length - 60} cấu hình trước đó</span>` : ""}${kqHTML}</div>`;
 };
 
-/* ---------- LÝ THUYẾT ---------- */
+// Lý thuyết
 ALGORITHMS.find(a => a.id === "lietke").lyThuyet = `
   <p><b>Thuật toán quay lui</b> xây dựng từng cấu hình (x₁, x₂, ..., xₙ) theo từng thành phần.
      Với mỗi vị trí i, lần lượt thử mọi giá trị j trong <b>tập đề cử</b>:</p>
